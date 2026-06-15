@@ -31,6 +31,7 @@
     "expo-status-bar": "~56.0.0",
     "expo-web-browser": "~56.0.5",
     "firebase": "^12.14.0",
+    "lottie-react-native": "~7.3.4",
     "phosphor-react-native": "^2.2.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",

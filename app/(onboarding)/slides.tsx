@@ -5,6 +5,13 @@ import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
 import { Button } from "../../src/components/ui/Button";
 import { textStyles } from "../../src/theme/styles";
 import { colors, spacing, radii } from "../../src/theme/tokens";
+import {
+  CompanionAnimation,
+  TrackAnimation,
+  InsightsAnimation,
+  RoutinesAnimation,
+  JourneyAnimation,
+} from "../../src/components/onboarding/OnboardingAnimations";
 
 const { width } = Dimensions.get("window");
 
@@ -13,26 +20,31 @@ const SLIDES = [
     id: "1",
     title: "Meet your personal health companion.",
     subtitle: "Aurora is here to help you understand your patterns and build healthier routines.",
+    Animation: CompanionAnimation,
   },
   {
     id: "2",
     title: "Track what matters.",
     subtitle: "Log your hydration, sleep, habits, and nutrition easily and beautifully.",
+    Animation: TrackAnimation,
   },
   {
     id: "3",
     title: "Receive personalized insights.",
     subtitle: "Turn your data into actionable, gentle guidance for your well-being.",
+    Animation: InsightsAnimation,
   },
   {
     id: "4",
     title: "Build healthier routines.",
     subtitle: "Consistency is key. Aurora helps you maintain streaks and build lasting habits.",
+    Animation: RoutinesAnimation,
   },
   {
     id: "5",
     title: "Learn more about yourself every day.",
     subtitle: "Your journey starts here.",
+    Animation: JourneyAnimation,
   },
 ];
 
@@ -60,10 +72,11 @@ export default function OnboardingSlidesScreen() {
   };
 
   const renderItem = ({ item }: { item: typeof SLIDES[0] }) => {
+    const { Animation } = item;
     return (
       <View style={[styles.slide, { width }]}>
-        <View style={styles.illustrationPlaceholder}>
-          {/* We would place an illustration here */}
+        <View style={styles.illustrationContainer}>
+          <Animation />
         </View>
         <View style={styles.textContainer}>
           <Text style={[textStyles.h2, styles.title]}>{item.title}</Text>
@@ -140,7 +153,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.xl,
   },
-  illustrationPlaceholder: {
+  illustrationContainer: {
     flex: 0.6,
     width: "100%",
     justifyContent: "center",

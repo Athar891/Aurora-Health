@@ -124,7 +124,7 @@ export default function SignupScreen() {
 
         <View style={styles.socialButtons}>
           <Button
-            title="Continue with Google"
+            title="Google"
             variant="secondary"
             onPress={handleGoogleSignUp}
             style={styles.socialButton}

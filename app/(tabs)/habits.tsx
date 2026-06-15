@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, ActivityIndicator, AppState } from "react-native";
 import { Check, CheckSquareOffset, Plus, Gear } from "phosphor-react-native";
 import { useRouter } from "expo-router";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
@@ -20,19 +20,29 @@ export default function HabitsScreen() {
   const router = useRouter();
   const { habits, completions, isLoading, addHabit, toggleCompletion, fetchHabits, fetchCompletions } = useHabitsStore();
   const [showAddModal, setShowAddModal] = useState(false);
-  const todayStr = getTodayStr();
+  const [todayStr, setTodayStr] = useState(getTodayStr());
+
+  // Listen for AppState changes to refresh the day if the app is left open across midnight
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        setTodayStr(getTodayStr());
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   // Fetch habits from Firestore on mount, and whenever auth changes
   useEffect(() => {
     fetchHabits();
   }, [fetchHabits]);
 
-  // Fetch completions for each habit when habits change
+  // Fetch completions for each habit when habits or todayStr change
   useEffect(() => {
     habits.forEach((h) => {
       fetchCompletions(h.id, todayStr);
     });
-  }, [habits.length]);
+  }, [habits.length, todayStr]);
 
   const isCompletedToday = (habitId: string): boolean => {
     const habitCompletions = completions[habitId] || [];
@@ -52,11 +62,26 @@ export default function HabitsScreen() {
     });
   };
 
-  // Calculate a simple streak (count of consecutive days - placeholder until real streak logic)
   const getStreakDisplay = (habitId: string): number => {
-    // For now show completions count as a simple indicator
-    const habitCompletions = completions[habitId] || [];
-    return habitCompletions.length > 0 ? habitCompletions.length : 0;
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit || !habit.currentStreak) return 0;
+    
+    // If the habit was completed today or yesterday, streak is active
+    if (habit.lastCompletedDate) {
+      if (habit.lastCompletedDate === todayStr) {
+        return habit.currentStreak;
+      }
+      
+      const [y, m, d] = todayStr.split("-").map(Number);
+      const yesterday = new Date(y, m - 1, d - 1);
+      const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+      
+      if (habit.lastCompletedDate === yesterdayStr) {
+        return habit.currentStreak;
+      }
+    }
+    // Streak broken because last completion was older than yesterday
+    return 0; 
   };
 
   return (

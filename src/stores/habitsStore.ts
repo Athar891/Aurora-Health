@@ -13,6 +13,8 @@ import {
   addDoc,
   deleteDoc,
   serverTimestamp,
+  updateDoc,
+  doc,
 } from "firebase/firestore";
 import { db, auth } from "../config/firebase";
 
@@ -63,7 +65,6 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     if (!uid) return;
 
     try {
-      // Check if completion already exists for this date
       const completionsRef = collection(
         db,
         "users",
@@ -75,6 +76,9 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
       const q = query(completionsRef, where("completedDate", "==", dateStr));
       const snap = await getDocs(q);
 
+      let newCompletionInfo = null;
+      let removedCompletionId = null;
+
       if (snap.empty) {
         // Create completion
         const docRef = await addDoc(completionsRef, {
@@ -82,31 +86,75 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
           status: "completed",
           createdAt: serverTimestamp(),
         });
-        const newCompletion: HabitCompletion = {
+        newCompletionInfo = {
           id: docRef.id,
           completedDate: dateStr,
           status: "completed",
           createdAt: new Date(),
         };
-        set((state) => ({
-          completions: {
-            ...state.completions,
-            [habitId]: [...(state.completions[habitId] || []), newCompletion],
-          },
-        }));
       } else {
         // Remove completion (toggle off)
         const docToDelete = snap.docs[0];
+        removedCompletionId = docToDelete.id;
         await deleteDoc(docToDelete.ref);
-        set((state) => ({
-          completions: {
-            ...state.completions,
-            [habitId]: (state.completions[habitId] || []).filter(
-              (c) => c.id !== docToDelete.id
-            ),
-          },
-        }));
       }
+
+      // Recalculate streak
+      const allSnap = await getDocs(completionsRef);
+      const dates = allSnap.docs.map(d => d.data().completedDate as string).sort().reverse();
+      
+      let currentStreak = 0;
+      let lastCompletedDate: string | undefined = undefined;
+
+      if (dates.length > 0) {
+        currentStreak = 1;
+        lastCompletedDate = dates[0];
+        let prevDateStr = dates[0];
+
+        for (let i = 1; i < dates.length; i++) {
+          const [y, m, d] = prevDateStr.split("-").map(Number);
+          const expectedPrev = new Date(y, m - 1, d - 1);
+          const expectedStr = `${expectedPrev.getFullYear()}-${String(expectedPrev.getMonth() + 1).padStart(2, "0")}-${String(expectedPrev.getDate()).padStart(2, "0")}`;
+          
+          if (dates[i] === expectedStr) {
+            currentStreak++;
+            prevDateStr = dates[i];
+          } else if (dates[i] !== prevDateStr) {
+            break; // Gap found (ignore duplicates if any)
+          }
+        }
+      }
+
+      // Update habit doc
+      const habitRef = doc(db, "users", uid, "habits", habitId);
+      await updateDoc(habitRef, {
+        currentStreak,
+        lastCompletedDate: lastCompletedDate || null,
+        updatedAt: serverTimestamp(),
+      });
+
+      // Update local state
+      set((state) => {
+        const updatedCompletions = { ...state.completions };
+        if (newCompletionInfo) {
+          updatedCompletions[habitId] = [...(state.completions[habitId] || []), newCompletionInfo as HabitCompletion];
+        } else if (removedCompletionId) {
+          updatedCompletions[habitId] = (state.completions[habitId] || []).filter(c => c.id !== removedCompletionId);
+        }
+
+        const updatedHabits = state.habits.map(h => {
+          if (h.id === habitId) {
+            return { ...h, currentStreak, lastCompletedDate };
+          }
+          return h;
+        });
+
+        return {
+          completions: updatedCompletions,
+          habits: updatedHabits,
+        };
+      });
+
     } catch (err) {
       console.error("Failed to toggle habit completion:", err);
     }

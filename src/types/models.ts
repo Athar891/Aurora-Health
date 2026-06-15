@@ -101,6 +101,8 @@ export interface Habit {
   frequency: HabitFrequency;
   customDays?: number[]; // 0=Sun .. 6=Sat
   active: boolean;
+  currentStreak?: number;
+  lastCompletedDate?: string;
   createdAt: FirestoreTimestamp;
   updatedAt: FirestoreTimestamp;
 }
