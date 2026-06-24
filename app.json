@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "aurora",
+    "slug": "aurora",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.athar891.aurora",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.athar891.aurora"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "aurora-health",
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "root": "./app"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.615319703339-kpbhmocpolketobkuf0nmvk3dpmle623"
+        }
+      ],
+      "./withModularHeaders.js",
+      "@react-native-community/datetimepicker",
+      "expo-audio"
+    ],
+    "extra": {
+      "router": {
+        "root": "./app"
+      },
+      "eas": {
+        "projectId": "1c2aeda2-aa11-4e21-9bad-bd4d33171c78"
+      }
+    }
+  }
+}
