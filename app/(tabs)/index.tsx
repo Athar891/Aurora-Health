@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from "react";
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { Plus, Drop, Moon } from "phosphor-react-native";
+import { Plus, Drop, Moon, CheckCircle, OrangeSlice } from "phosphor-react-native";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
 import { HeaderAvatar } from "../../src/components/shared/HeaderAvatar";
 import { Card } from "../../src/components/ui/Card";
@@ -337,6 +337,43 @@ export default function HomeDashboard() {
           </View>
         </View>
 
+        {/* Habits & Meals Summaries */}
+        <View style={{ flexDirection: "row", gap: spacing.md, marginBottom: spacing.xl }}>
+          <Card style={{ flex: 1 }}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={textStyles.captionSmall}>HABITS</Text>
+              <CheckCircle color={colors.accentOlive} size={28} weight="fill" style={{ opacity: 0.4 }} />
+            </View>
+            <Text style={[textStyles.h2, styles.metricValue]}>
+              {completedHabitsToday}
+              <Text style={textStyles.bodySmall}>/{activeHabitsToday}</Text>
+            </Text>
+            <Text style={[textStyles.bodySmall, { color: colors.inkSoft, marginBottom: spacing.sm }]}>
+              {activeHabitsToday > 0 
+                ? `${activeHabitsToday - completedHabitsToday} remaining today` 
+                : "No active habits"}
+            </Text>
+            <ProgressBar progress={habitsProgress} color={colors.accentOlive} style={styles.progress} />
+          </Card>
+
+          <Card style={{ flex: 1 }}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={textStyles.captionSmall}>MEALS</Text>
+              <OrangeSlice color={colors.accentTerracotta} size={28} weight="fill" style={{ opacity: 0.4 }} />
+            </View>
+            <Text style={[textStyles.h2, styles.metricValue]}>
+              {Math.round(nutritionTotals.calories)}
+              <Text style={textStyles.bodySmall}> kcal</Text>
+            </Text>
+            <Text style={[textStyles.bodySmall, { color: colors.inkSoft, marginBottom: spacing.sm }]}>
+              {nutritionGoals.calorieGoal > 0 
+                ? `${Math.max(0, Math.round(nutritionGoals.calorieGoal - nutritionTotals.calories))} kcal left` 
+                : "No goal set"}
+            </Text>
+            <ProgressBar progress={caloriesProgress} color={colors.accentTerracotta} style={styles.progress} />
+          </Card>
+        </View>
+
         {/* Action Center */}
         <Text style={[textStyles.h3, styles.sectionTitle]}>Log & Track</Text>
         <View style={styles.actionsGrid}>
@@ -400,13 +437,13 @@ const styles = StyleSheet.create({
   mainColumnsRow: {
     flexDirection: "row",
     gap: spacing.md,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   leftColumn: {
-    flex: 1.1, // slightly wider for the rings
+    flex: 1, 
   },
   rightColumn: {
-    flex: 0.9,
+    flex: 1,
     gap: spacing.md,
   },
   fullHeightCard: {
