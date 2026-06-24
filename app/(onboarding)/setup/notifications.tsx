@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, StyleSheet, Text, Switch, ScrollView, TouchableOpacity } from "react-native";
+import { View, StyleSheet, Text, Switch, ScrollView, TouchableOpacity, Alert, Platform } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { ScreenWrapper } from "../../../src/components/ui/ScreenWrapper";
 import { SectionHeader } from "../../../src/components/shared/SectionHeader";
@@ -46,6 +46,20 @@ export default function NotificationsScreen() {
   const handleNext = async () => {
     await updateProfile({ notificationPreferences: preferences });
     router.push({ pathname: "/(onboarding)/setup/tracking-setup", params: { autoVoice: "true" } });
+  };
+
+  const handleSkip = () => {
+    const message = "You can finish setting up when you are ready to start your first goal.";
+    if (Platform.OS === 'web') {
+      if (window.confirm(message + " Skip for now?")) {
+        router.replace("/(tabs)/");
+      }
+    } else {
+      Alert.alert("Skip Setup?", message, [
+        { text: "Cancel", style: "cancel" },
+        { text: "Skip", onPress: () => router.replace("/(tabs)/") }
+      ]);
+    }
   };
 
   // Auto-start voice
@@ -319,6 +333,9 @@ Text: "${text}"`;
 
       <View style={styles.footer}>
         <Button title="Continue" onPress={handleNext} />
+        <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+          <Text style={[textStyles.bodySemiBold, { color: colors.inkSoft }]}>Skip for now</Text>
+        </TouchableOpacity>
       </View>
 
       <AIVoiceOrb 
@@ -385,5 +402,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,
+  },
+  skipButton: {
+    marginTop: spacing.lg,
+    alignItems: "center",
+    paddingVertical: spacing.sm,
   },
 });

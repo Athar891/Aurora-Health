@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert, Platform } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { ScreenWrapper } from "../../../src/components/ui/ScreenWrapper";
 import { SectionHeader } from "../../../src/components/shared/SectionHeader";
 import { Input } from "../../../src/components/ui/Input";
 import { Button } from "../../../src/components/ui/Button";
+import { textStyles } from "../../../src/theme/styles";
 import { colors, spacing } from "../../../src/theme/tokens";
 import { useAuthStore } from "../../../src/stores/authStore";
 import { Microphone } from "phosphor-react-native";
@@ -56,6 +57,20 @@ export default function TrackingSetupScreen() {
     });
 
     router.push("/(onboarding)/complete");
+  };
+
+  const handleSkip = () => {
+    const message = "You can finish setting up when you are ready to start your first goal.";
+    if (Platform.OS === 'web') {
+      if (window.confirm(message + " Skip for now?")) {
+        router.replace("/(tabs)/");
+      }
+    } else {
+      Alert.alert("Skip Setup?", message, [
+        { text: "Cancel", style: "cancel" },
+        { text: "Skip", onPress: () => router.replace("/(tabs)/") }
+      ]);
+    }
   };
 
   const isFormValid = waterGoal.length > 0 && sleepGoal.length > 0;
@@ -273,6 +288,9 @@ Text: "${text}"`;
           onPress={handleNext}
           disabled={!isFormValid}
         />
+        <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+          <Text style={[textStyles.bodySemiBold, { color: colors.inkSoft }]}>Skip for now</Text>
+        </TouchableOpacity>
       </View>
 
       <AIVoiceOrb 
@@ -315,5 +333,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,
+  },
+  skipButton: {
+    marginTop: spacing.lg,
+    alignItems: "center",
+    paddingVertical: spacing.sm,
   },
 });

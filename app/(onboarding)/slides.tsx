@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { View, Text, StyleSheet, Dimensions, FlatList, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import { View, Text, StyleSheet, Dimensions, FlatList, NativeSyntheticEvent, NativeScrollEvent, Alert, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
 import { Button } from "../../src/components/ui/Button";
@@ -68,7 +68,21 @@ export default function OnboardingSlidesScreen() {
   };
 
   const handleSkip = () => {
-    router.push("/(onboarding)/auth/signup");
+    if (Platform.OS === 'web') {
+      const proceed = window.confirm("You can finish setting up when you are ready to start your first goal. Skip for now?");
+      if (proceed) {
+        router.push("/(onboarding)/auth/signup");
+      }
+    } else {
+      Alert.alert(
+        "Skip Setup?",
+        "You can finish setting up when you are ready to start your first goal.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Skip", onPress: () => router.push("/(onboarding)/auth/signup") }
+        ]
+      );
+    }
   };
 
   const renderItem = ({ item }: { item: typeof SLIDES[0] }) => {
@@ -109,6 +123,7 @@ export default function OnboardingSlidesScreen() {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         bounces={false}
+        style={{ flex: 1 }}
       />
 
       <View style={styles.footer}>
@@ -151,16 +166,16 @@ const styles = StyleSheet.create({
   slide: {
     flex: 1,
     alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: spacing.xl,
   },
   illustrationContainer: {
-    flex: 0.6,
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: spacing.xxl,
   },
   textContainer: {
-    flex: 0.4,
     width: "100%",
     alignItems: "center",
   },

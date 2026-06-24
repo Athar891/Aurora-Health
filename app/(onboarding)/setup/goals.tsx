@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Text, ScrollView, Alert, Platform } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { ScreenWrapper } from "../../../src/components/ui/ScreenWrapper";
 import { SectionHeader } from "../../../src/components/shared/SectionHeader";
@@ -51,6 +51,20 @@ export default function GoalsScreen() {
   const handleNext = async () => {
     await updateProfile({ goals: selectedGoals });
     router.push({ pathname: "/(onboarding)/setup/notifications", params: { autoVoice: "true" } });
+  };
+
+  const handleSkip = () => {
+    const message = "You can finish setting up when you are ready to start your first goal.";
+    if (Platform.OS === 'web') {
+      if (window.confirm(message + " Skip for now?")) {
+        router.replace("/(tabs)/");
+      }
+    } else {
+      Alert.alert("Skip Setup?", message, [
+        { text: "Cancel", style: "cancel" },
+        { text: "Skip", onPress: () => router.replace("/(tabs)/") }
+      ]);
+    }
   };
 
   const isFormValid = selectedGoals.length > 0;
@@ -283,6 +297,9 @@ Text: "${text}"`;
           onPress={handleNext}
           disabled={!isFormValid}
         />
+        <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+          <Text style={[textStyles.bodySemiBold, { color: colors.inkSoft }]}>Skip for now</Text>
+        </TouchableOpacity>
       </View>
 
       <AIVoiceOrb 
@@ -341,5 +358,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,
+  },
+  skipButton: {
+    marginTop: spacing.lg,
+    alignItems: "center",
+    paddingVertical: spacing.sm,
   },
 });
