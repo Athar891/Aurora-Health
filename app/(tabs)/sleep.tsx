@@ -40,21 +40,18 @@ export default function SleepScreen() {
   }));
 
   return (
-    <ScreenWrapper>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }]}>
-          <SectionHeader
-            style={{ flex: 1 }}
-            index="03"
-            label="RECOVERY"
-            title="Sleep"
-            subtitle="Rest and recharge."
-          />
-          <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Gear color={colors.ink} size={24} weight="regular" />
-          </TouchableOpacity>
-        </View>
-
+    <ScreenWrapper scrollable={false}>
+      <View style={[styles.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+        <SectionHeader
+          style={{ flex: 1, marginBottom: 0 }}
+          title="Sleep"
+          subtitle="Rest and recharge."
+        />
+        <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Gear color={colors.ink} size={24} weight="regular" />
+        </TouchableOpacity>
+      </View>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Text style={[textStyles.h3, styles.sectionTitle]}>This Week (Hours)</Text>
         <Card style={styles.chartCard}>
           <WeeklyBarChart
@@ -109,14 +106,26 @@ export default function SleepScreen() {
 
 const styles = StyleSheet.create({
   scrollContent: {
+    paddingTop: spacing.lg,
     paddingBottom: spacing.xxl * 2,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.lg,
+    alignItems: "center",
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginHorizontal: -spacing.lg,
+    backgroundColor: colors.bgPaper,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    zIndex: 10,
   },
   floatingButton: {
     position: "absolute",

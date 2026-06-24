@@ -17,7 +17,7 @@ import {
   CheckCircle,
   Drop,
   Moon,
-  Fork,
+  ForkKnife,
   Barbell,
   Fire,
 } from "phosphor-react-native";
@@ -70,6 +70,14 @@ export default function DailyGoalsScreen() {
     }
   }
 
+  const safeBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/profile");
+    }
+  };
+
   async function handleSave() {
     const hydration = parseInt(hydrationGoal) || 2000;
     const sleep = parseFloat(sleepGoal) || 8;
@@ -94,9 +102,14 @@ export default function DailyGoalsScreen() {
         proteinGoal: protein,
         activityLevel,
       });
-      Alert.alert("Saved!", "Your daily goals have been updated.", [
-        { text: "Done", onPress: () => router.back() },
-      ]);
+      if (Platform.OS === "web") {
+        window.alert("Your daily goals have been updated.");
+        safeBack();
+      } else {
+        Alert.alert("Saved!", "Your daily goals have been updated.", [
+          { text: "Done", onPress: safeBack },
+        ]);
+      }
     } catch (e) {
       Alert.alert("Error", "Could not save your goals. Please try again.");
     } finally {
@@ -111,7 +124,7 @@ export default function DailyGoalsScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={safeBack} style={styles.backButton}>
           <ArrowLeft size={24} color={colors.ink} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Daily Goals</Text>

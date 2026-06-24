@@ -194,3 +194,45 @@ export function toDate(value: unknown): Date {
   if (value instanceof Date) return value;
   return new Date();
 }
+
+/**
+ * Clear all user data and reset profile to factory defaults.
+ * Used for the "Clear Data" settings option.
+ */
+export async function clearUserData(): Promise<void> {
+  const uid = getCurrentUid();
+
+  // Reset profile (force back to onboarding)
+  await updateDoc(doc(db, "users", uid, "profile", "data"), {
+    onboardingComplete: false,
+    goals: [],
+    waterGoal: 2000,
+    sleepGoal: 8,
+    heightCm: 0,
+    weightKg: 0,
+    age: 0,
+    gender: "prefer-not-to-say",
+    notificationPreferences: {
+      hydrationReminders: true,
+      sleepReminders: true,
+      habitReminders: true,
+      dailyInsights: true,
+    }
+  });
+
+  // Delete preferences document
+  try {
+    await deleteDoc(doc(db, "users", uid, "preferences", "data"));
+  } catch (e) {
+    // Ignore if not exists
+  }
+
+  // Delete all docs in subcollections
+  const collectionsToClear = ["hydration", "sleep", "nutrition", "habits", "habitCompletions"];
+  for (const colName of collectionsToClear) {
+    const colRef = collection(db, "users", uid, colName);
+    const snap = await getDocs(query(colRef));
+    const deletePromises = snap.docs.map(d => deleteDoc(d.ref));
+    await Promise.all(deletePromises);
+  }
+}

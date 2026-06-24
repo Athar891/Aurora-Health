@@ -74,6 +74,36 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleClearData = async () => {
+    const msg = "Are you sure you want to delete all your tracked data? This cannot be undone.";
+    if (Platform.OS === "web") {
+      if (window.confirm(msg)) {
+        await executeClearData();
+      }
+    } else {
+      Alert.alert("Clear All Data", msg, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear Data",
+          style: "destructive",
+          onPress: executeClearData,
+        },
+      ]);
+    }
+  };
+
+  const executeClearData = async () => {
+    try {
+      const { clearUserData } = await import("../../src/services/firestoreService");
+      await clearUserData();
+      await signOut();
+      router.replace("/(onboarding)/landing");
+    } catch (e) {
+      Alert.alert("Error", "Could not clear data.");
+      console.error(e);
+    }
+  };
+
   // Derive display values from user profile
   const displayName = user?.name || "User";
   const displayEmail = user?.email || "";
@@ -85,12 +115,12 @@ export default function ProfileScreen() {
     .slice(0, 2) || "U";
 
   return (
-    <ScreenWrapper>
-      <View style={styles.header}>
-        <SectionHeader label="SETTINGS" title="Settings & Profile" subtitle="Manage your account and preferences." />
+    <ScreenWrapper scrollable={false}>
+      <View style={[styles.header, { justifyContent: "space-between" }]}>
+        <SectionHeader style={{ flex: 1, marginBottom: 0 }} title="Settings & Profile" subtitle="Manage your account and preferences." />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
         {/* Profile Summary */}
         <TouchableOpacity onPress={handlePickPhoto} activeOpacity={0.7}>
           <View style={styles.profileSummary}>
@@ -124,7 +154,13 @@ export default function ProfileScreen() {
         <Card noPadding style={styles.menuCard}>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Linking.openSettings()}
+            onPress={() => {
+              if (Platform.OS === "web") {
+                window.alert("Please manage notifications in your browser settings.");
+              } else {
+                Linking.openSettings();
+              }
+            }}
             activeOpacity={0.7}
           >
             <Text style={textStyles.bodyMedium}>Notifications</Text>
@@ -173,6 +209,20 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Card>
 
+        <Text style={[textStyles.captionSmall, styles.sectionTitle]}>
+          DATA MANAGEMENT
+        </Text>
+        <Card noPadding style={styles.menuCard}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={handleClearData}
+            activeOpacity={0.7}
+          >
+            <Text style={[textStyles.bodyMedium, { color: colors.error }]}>Clear All Data</Text>
+            <CaretRight color={colors.inkSoft} size={20} />
+          </TouchableOpacity>
+        </Card>
+
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={handleSignOut}
@@ -190,15 +240,26 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingTop: spacing.lg,
+    alignItems: "center",
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginHorizontal: -spacing.lg,
+    backgroundColor: colors.bgPaper,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    zIndex: 10,
   },
   iconButton: {
     padding: spacing.sm,
   },
   content: {
+    paddingTop: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   profileSummary: {

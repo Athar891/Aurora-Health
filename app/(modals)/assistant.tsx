@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { CaretLeft, Sparkle } from "phosphor-react-native";
+import { CaretLeft, Sparkle, Gear } from "phosphor-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { colors, spacing, radii } from "../../src/theme/tokens";
 import { textStyles } from "../../src/theme/styles";
@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { aiOrchestrator } from "../../src/services/ai/orchestrator";
 import { voiceService } from "../../src/services/ai/voiceService";
 import { useVoiceRecorder } from "../../src/hooks/useVoiceRecorder";
+import { useAuthStore } from "../../src/stores/authStore";
 
 // Components
 import AssistantEmptyState from "../../src/components/assistant/AssistantEmptyState";
@@ -43,6 +44,16 @@ export default function AssistantModal() {
   const [showLiveAssistant, setShowLiveAssistant] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+
+  const user = useAuthStore((s) => s.user);
+  const firstName = user?.name ? user.name.split(" ")[0] : "there";
+  
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
 
   // Voice recorder hook for inline mic
   const {
@@ -118,19 +129,40 @@ export default function AssistantModal() {
     }
   }, [input, isTyping]);
 
+  // We need a ref for stopAndTranscribe because onSilence needs to call it
+  const stopAndTranscribeRef = useRef(stopAndTranscribe);
+  const inputRef = useRef(input);
+  
+  useEffect(() => {
+    stopAndTranscribeRef.current = stopAndTranscribe;
+    inputRef.current = input;
+  }, [stopAndTranscribe, input]);
+
   // Handle mic press (inline voice-to-text)
   const handleMicPress = useCallback(async () => {
     if (isMicRecording) {
-      // Stop and transcribe
-      const text = await stopAndTranscribe();
+      // Stop and transcribe manually
+      const text = await stopAndTranscribeRef.current();
       if (text) {
-        setInput((prev) => (prev ? prev + " " + text : text));
+        setInput(inputRef.current ? inputRef.current + " " + text : text);
       }
     } else {
-      // Start recording
-      await startRecording();
+      // Start recording with real-time text injection and auto-stop on silence
+      await startRecording({
+        onLiveTranscript: (text) => {
+          setInput(text);
+        },
+        onSilence: async () => {
+          if (stopAndTranscribeRef.current) {
+            const text = await stopAndTranscribeRef.current();
+            if (text) {
+              setInput(inputRef.current ? inputRef.current + " " + text : text);
+            }
+          }
+        }
+      });
     }
-  }, [isMicRecording, stopAndTranscribe, startRecording]);
+  }, [isMicRecording, startRecording]);
 
   // Handle image picker (+)
   const handlePlusPress = useCallback(async () => {
@@ -203,22 +235,17 @@ export default function AssistantModal() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() =>
-            router.canGoBack() ? router.back() : router.replace("/(tabs)")
-          }
-        >
-          <CaretLeft color={colors.ink} size={24} />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Sparkle color={colors.accentTerracotta} size={18} weight="fill" />
-          <Text style={[textStyles.h3, styles.headerTitle]}>
-            Aurora Assistant
-          </Text>
+      <View style={[styles.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", borderBottomWidth: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.sm }]}>
+        <View>
+          <Text style={textStyles.captionSmall}>AURORA AI</Text>
+          <Text style={[textStyles.h2, { marginTop: spacing.xs }]}>{getGreeting()}, {firstName}.</Text>
         </View>
-        <View style={styles.headerRight} />
+        <TouchableOpacity
+          onPress={() => router.push("/(tabs)/profile")}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Gear color={colors.ink} size={24} weight="regular" />
+        </TouchableOpacity>
       </View>
 
       {/* Chat Area */}

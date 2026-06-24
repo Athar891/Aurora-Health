@@ -85,12 +85,10 @@ export default function HabitsScreen() {
   };
 
   return (
-    <ScreenWrapper>
-      <View style={[styles.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }]}>
+    <ScreenWrapper scrollable={false}>
+      <View style={[styles.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
         <SectionHeader
-          style={{ flex: 1 }}
-          index="02"
-          label="HABITS"
+          style={{ flex: 1, marginBottom: 0 }}
           title="Daily Routines"
           subtitle="Small steps, big impact."
         />
@@ -110,7 +108,7 @@ export default function HabitsScreen() {
           </Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.list}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
           {habits.map((habit) => {
             const completed = isCompletedToday(habit.id);
             return (
@@ -167,9 +165,20 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingTop: spacing.lg,
+    alignItems: "center",
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginHorizontal: -spacing.lg,
+    backgroundColor: colors.bgPaper,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    zIndex: 10,
   },
   floatingButton: {
     position: "absolute",
@@ -188,6 +197,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   list: {
+    paddingTop: spacing.lg,
     gap: spacing.md,
     paddingBottom: spacing.xxl,
   },

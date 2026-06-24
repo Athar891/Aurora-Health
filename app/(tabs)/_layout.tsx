@@ -63,18 +63,6 @@ export default function TabsLayout() {
                 <Sparkle color={colors.bgPaper} size={size + 2} weight="fill" />
               </View>
             ),
-            tabBarButton: ({ style, children }) => (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={style}
-                onPress={(e) => {
-                  e.preventDefault();
-                  router.push("/(modals)/assistant");
-                }}
-              >
-                {children}
-              </TouchableOpacity>
-            ),
           }}
         />
         <Tabs.Screen

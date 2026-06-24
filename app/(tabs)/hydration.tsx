@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated } from "react-native";
 import { Drop, Plus, Minus } from "phosphor-react-native";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
 import { SectionHeader } from "../../src/components/shared/SectionHeader";
@@ -24,6 +24,22 @@ export default function HydrationScreen() {
   const totalMl = getTotalForToday();
   const percentage = Math.min((totalMl / dailyGoalMl) * 100, 100);
 
+  const fillAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(fillAnim, {
+      toValue: percentage,
+      useNativeDriver: false,
+      friction: 8,
+      tension: 40,
+    }).start();
+  }, [percentage]);
+
+  const heightInterpolation = fillAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ["0%", "100%"],
+  });
+
   const handleAdd = (amount: number) => {
     addLog(amount, "manual");
   };
@@ -38,21 +54,29 @@ export default function HydrationScreen() {
   }));
 
   return (
-    <ScreenWrapper>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <SectionHeader
-            index="01"
-            label="HYDRATION"
-            title="Daily Intake"
-            subtitle="Keep the flow going."
-          />
-        </View>
+    <ScreenWrapper scrollable={false}>
+      <View style={styles.header}>
+        <SectionHeader
+          style={{ marginBottom: 0 }}
+          title="Daily Intake"
+          subtitle="Keep the flow going."
+        />
+      </View>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         {/* Visualizer */}
         <View style={styles.visualizerContainer}>
-          <View style={styles.cylinder}>
-            <View style={[styles.waterFill, { height: `${percentage}%` }]} />
+          <View style={styles.bottleContainer}>
+            <View style={styles.bottleCap} />
+            <View style={styles.bottleNeck} />
+            <View style={styles.bottleBody}>
+              <Animated.View style={[styles.waterFill, { height: heightInterpolation }]} />
+              <View style={styles.measurementContainer}>
+                <View style={styles.measurementLine} />
+                <View style={styles.measurementLine} />
+                <View style={styles.measurementLine} />
+              </View>
+            </View>
           </View>
 
           {/* ± 100ml Controls */}
@@ -142,31 +166,85 @@ export default function HydrationScreen() {
 
 const styles = StyleSheet.create({
   scrollContent: {
+    paddingTop: spacing.lg,
     paddingBottom: spacing.xxl * 2,
   },
   header: {
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginHorizontal: -spacing.lg,
+    backgroundColor: colors.bgPaper,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    zIndex: 10,
   },
   visualizerContainer: {
     alignItems: "center",
     marginBottom: spacing.xxl,
   },
-  cylinder: {
-    width: 120,
-    height: 240,
+  bottleContainer: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  bottleCap: {
+    width: 44,
+    height: 18,
+    backgroundColor: colors.accentSlate,
+    borderTopLeftRadius: radii.sm,
+    borderTopRightRadius: radii.sm,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    borderBottomWidth: 0,
+  },
+  bottleNeck: {
+    width: 36,
+    height: 20,
     backgroundColor: colors.bgPaperAlt,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
+    borderLeftWidth: 2,
+    borderRightWidth: 2,
+    borderColor: colors.ink,
+  },
+  bottleBody: {
+    width: 140,
+    height: 260,
+    backgroundColor: "rgba(92, 122, 138, 0.05)", // slightly tinted background
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    borderWidth: 2,
+    borderColor: colors.ink,
     overflow: "hidden",
     justifyContent: "flex-end",
-    marginBottom: spacing.lg,
+    position: "relative",
   },
   waterFill: {
     width: "100%",
     backgroundColor: colors.accentSlate,
-    opacity: 0.8,
+    opacity: 0.85,
+  },
+  measurementContainer: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: "100%",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+  },
+  measurementLine: {
+    width: 24,
+    height: 2,
+    backgroundColor: colors.ink,
+    opacity: 0.15,
   },
   counterRow: {
     flexDirection: "row",

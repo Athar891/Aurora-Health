@@ -61,7 +61,7 @@ export default function OnboardingSlidesScreen() {
 
   const handleNext = () => {
     if (currentIndex < SLIDES.length - 1) {
-      flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+      flatListRef.current?.scrollToOffset({ offset: (currentIndex + 1) * width, animated: true });
     } else {
       router.push("/(onboarding)/auth/signup");
     }

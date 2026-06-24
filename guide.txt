@@ -1,0 +1,123 @@
+Anova App - Candidate Feedback 
+Pre-Demo Notes for Wednesday 
+ 
+candidates— 
+
+1.​ Nishesh 
+2.​ Anshu 
+3.​ Aman Kumar 
+4.​ Chirag 
+5.​ Maneesha 
+
+ 
+ 
+1. Goals Onboarding 
+The goal-setting flow when you first sign up is a strong feature. We want to see this retained and 
+polished in the final build. 
+ 
+2. End-of-Day Report 
+The app should automatically send users a daily end-of-day summary report — a recap of their 
+progress, goals hit, and what is still pending. This should feel personalized and motivating. 
+ 
+3. Hydration Quick-Add 
+The quick-add interaction seen in the hydration feature is the right UX pattern for habit tracking. 
+This style of frictionless, one-tap logging should be extended across other goals throughout the 
+app. 
+ 
+4. Skip Buttons with Gentle Nudges 
+Add skip buttons throughout the onboarding setup, but pair them with encouraging prompts that 
+remind users to complete their setup when they are ready to start working on a goal. For 
+example: "You can finish setting up when you are ready to start your first goal." 
+ 
+5. Tagline Rewording 
+The current opening line "Your AI Companion" should be updated to something warmer and 
+more wellness-focused. Suggestions: "Your Health Buddy" or "Your Wellness Partner." The goal 
+is for it to feel personal, not clinical. 
+ 
+6. Anova Speaks in the Intro 
+In the intro and onboarding screens, have Anova itself speak — introducing the app in first 
+person. This gives the brand personality and makes the first impression feel alive and human. 
+ 
+ 
+
+
+
+ 
+
+
+
+ 
+ 
+--- 
+Additional Feature Insights & Best Practices 
+--- 
+ 
+7. Streaks with Grace Days 
+Streaks are a powerful motivator but need a grace day or streak freeze so that missing one day 
+does not cause people to quit entirely. Losing a long streak is one of the top reasons users 
+abandon wellness apps. 
+ 
+8. Frictionless Minimum Actions 
+Make the smallest possible action the default — so easy it feels almost too simple. This follows 
+the 2-minute rule: the lower the barrier to logging or completing a habit, the more consistently 
+people do it. The hydration quick-add is a good example of this done right. 
+ 
+9. Adaptive Goals 
+If someone is consistently hitting 100% of their goal, the app should nudge them to level up. If 
+they are struggling, it should suggest scaling back without judgment. Goals that never change 
+feel stale; goals that adjust feel alive. 
+
+
+
+ 
+10. Personalized Onboarding That Learns Your Lifestyle 
+Onboarding should ask about sleep schedule, work hours, and energy levels so that reminders 
+and recommendations feel tailored, not generic. Apps that feel built for you specifically see 
+much higher long-term retention. 
+ 
+11. Progress Visibility Over Perfection 
+Showing someone they are 70% of the way there is more motivating than showing they missed 
+30%. Frame progress positively. The language and framing around incomplete goals is critical 
+— it should never feel like a punishment. 
+ 
+12. Identity-Based Framing 
+Outcome-based goals ("I want to drink more water") are less effective than identity-based ones 
+("I am someone who stays hydrated"). Where possible, the app should reinforce who the user is 
+becoming, not just what they are tracking. 
+ 
+13. Celebrate Small Wins 
+A subtle animation, a short encouraging line, or a simple acknowledgment after completing a 
+goal goes a long way. These micro-moments of celebration are what make an app feel 
+rewarding rather than transactional. 
+ 
+14. Weekly Reviews 
+A weekly summary showing patterns over 7 days gives users perspective they cannot get from 
+daily numbers alone. The best version asks one simple reflection question rather than a long 
+survey. 
+ 
+15. Smart Notifications 
+Notification fatigue is one of the top reasons people delete wellness apps. Reminders should 
+feel timely and personal — ideally let users pick their own reminder times based on their routine. 
+Contextual nudges (reminding someone to hydrate after logging a workout) feel intelligent rather 
+than automated. 
+ 
+16. Light Social and Accountability Features 
+Even minimal social features — sharing a streak with a friend or having one accountability 
+partner — significantly improve retention. Public commitments are more powerful than private 
+ones. Leaderboards should be optional since they motivate some users and demotivate others. 
+ 
+17. Cross-Goal Insights 
+Connecting dots between goals is one of the most powerful things a wellness app can do. For 
+example: "On days you sleep 7 or more hours, you hit your movement goal 80% of the time." 
+This kind of insight makes the data feel meaningful rather than just informational. 
+ 
+18. Re-Engagement Strategy 
+Most wellness apps optimize for the day-one experience and forget about week three, which is 
+
+
+
+when the majority of users fall off. A strong re-engagement approach — knowing what to do 
+when someone goes quiet for 3 days — is what separates apps that retain users from ones that 
+get deleted. This is the single biggest differentiator for long-term success. 
+ 
+Onboarding should be super simple. More personalized.

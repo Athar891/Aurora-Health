@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
-import { CaretDown, CaretUp } from "phosphor-react-native";
+import { Plus } from "phosphor-react-native";
 import { MealFoodEntry, MealType } from "../../types/models";
 import { colors, spacing, radii, typography, fontSizes, borders } from "../../theme/tokens";
 
@@ -19,21 +19,14 @@ export function MealSection({
   onLogMeal,
   accentColor,
 }: MealSectionProps) {
-  const [expanded, setExpanded] = useState(true);
-
   const totalCals = entries.reduce((sum, e) => sum + e.calories, 0);
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <TouchableOpacity
-        style={styles.header}
-        activeOpacity={0.7}
-        onPress={() => setExpanded(!expanded)}
-      >
+      <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.summary}>{totalCals} kcal</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity
@@ -41,30 +34,21 @@ export function MealSection({
             onPress={() => onLogMeal(mealType)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text style={[styles.logBtnText, { color: accentColor }]}>+ Log</Text>
+            <Plus size={18} color={accentColor} weight="bold" />
           </TouchableOpacity>
-          {expanded ? (
-            <CaretUp size={16} color={colors.inkSoft} />
-          ) : (
-            <CaretDown size={16} color={colors.inkSoft} />
-          )}
         </View>
-      </TouchableOpacity>
+      </View>
 
       {/* Content */}
-      {expanded && (
-        <View style={styles.content}>
-          {entries.length === 0 ? (
-            <Text style={styles.emptyText}>Nothing logged yet.</Text>
+      <View style={styles.content}>
+        {entries.length === 0 ? (
+          <Text style={styles.emptyText}>Nothing logged yet.</Text>
           ) : (
             <View style={styles.entryList}>
-              {entries.map((entry, idx) => (
+              {entries.map((entry) => (
                 <View
                   key={entry.id}
-                  style={[
-                    styles.entryRow,
-                    idx < entries.length - 1 && styles.borderBottom,
-                  ]}
+                  style={[styles.entryRow, styles.borderBottom]}
                 >
                   <View style={styles.entryInfo}>
                     <Text style={styles.entryName} numberOfLines={1}>
@@ -77,10 +61,15 @@ export function MealSection({
                   <Text style={styles.entryCals}>{entry.calories} kcal</Text>
                 </View>
               ))}
+              <View style={[styles.entryRow, styles.totalRow]}>
+                <View style={styles.entryInfo}>
+                  <Text style={styles.totalName}>Total</Text>
+                </View>
+                <Text style={styles.totalCals}>{totalCals} kcal</Text>
+              </View>
             </View>
           )}
         </View>
-      )}
     </View>
   );
 }
@@ -121,15 +110,11 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   logBtn: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    padding: spacing.xs,
     borderRadius: radii.pill,
     backgroundColor: colors.bgPaperAlt,
-  },
-  logBtnText: {
-    fontFamily: typography.body.semiBold,
-    fontSize: fontSizes.captionSmall,
-    textTransform: "uppercase",
+    alignItems: "center",
+    justifyContent: "center",
   },
   content: {
     padding: spacing.md,
@@ -173,6 +158,22 @@ const styles = StyleSheet.create({
   entryCals: {
     fontFamily: typography.body.semiBold,
     fontSize: fontSizes.bodySmall,
+    color: colors.ink,
+  },
+  totalRow: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+  },
+  totalName: {
+    fontFamily: typography.body.semiBold,
+    fontSize: fontSizes.bodySmall,
+    color: colors.inkSoft,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  totalCals: {
+    fontFamily: typography.body.bold,
+    fontSize: fontSizes.body,
     color: colors.ink,
   },
 });

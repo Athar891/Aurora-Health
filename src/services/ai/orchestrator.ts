@@ -1,9 +1,5 @@
-import { GoogleGenerativeAI, ChatSession, FunctionDeclaration } from "@google/generative-ai";
 import { aiTools } from "./tools";
 import { agents, AgentArgs } from "./agents";
-
-const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "";
-const genAI = new GoogleGenerativeAI(apiKey);
 
 const SYSTEM_INSTRUCTION = `
 You are Aurora, an intelligent health companion. You track hydration, sleep, nutrition, and habits.
@@ -12,101 +8,95 @@ Be brief, friendly, and directly confirm when you have logged something. Do not 
 `;
 
 export class AIOrchestrator {
-  private chatSession: ChatSession | null = null;
+  private history: any[] = [];
 
   startSession() {
-    if (!apiKey) {
-      console.error("EXPO_PUBLIC_GEMINI_API_KEY is missing or empty. Restart Metro after adding it to .env");
-      return;
-    }
-
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
-      tools: aiTools as any,
-      systemInstruction: SYSTEM_INSTRUCTION
-    });
-
-    this.chatSession = model.startChat({
-      history: [
-        {
-          role: "user",
-          parts: [{ text: "Hello!" }],
-        },
-        {
-          role: "model",
-          parts: [{ text: "Hi! I'm Aurora. I can help you log your hydration, sleep, meals, and habits. What would you like to do?" }],
-        },
-      ],
-    });
+    this.history = [
+      { role: "system", content: SYSTEM_INSTRUCTION },
+      { role: "user", content: "Hello!" },
+      { role: "assistant", content: "Hi! I'm Aurora. I can help you log your hydration, sleep, meals, and habits. What would you like to do?" }
+    ];
   }
 
   async sendMessage(messageText: string, onProgress?: (text: string) => void): Promise<string> {
-    if (!this.chatSession) {
+    if (this.history.length === 0) {
       this.startSession();
     }
 
-    if (!this.chatSession) throw new Error("Failed to start chat session");
+    this.history.push({ role: "user", content: messageText });
 
     try {
-      // 1. Send the initial message
-      const result = await this.chatSession.sendMessage(messageText);
-      let response = result.response;
-      let responseText = response.text();
-      let hasExecutedFunctions = false;
+      const groqKey = process.env.EXPO_PUBLIC_WHISPER_API_KEY; // Reusing Groq key
+      if (!groqKey) {
+        throw new Error("EXPO_PUBLIC_WHISPER_API_KEY is missing. Groq requires this key.");
+      }
 
-      // 2. Handle potential function calls iteratively
-      // While the response contains function calls, execute them and send the results back
-      let calls = response.functionCalls();
-      
-      while (calls && calls.length > 0) {
-        hasExecutedFunctions = true;
-        const functionResponses = [];
+      let iteration = 0;
+      let finalResponseText = "";
 
-        for (const call of calls) {
-          const functionName = call.name;
-          const args = call.args as AgentArgs;
-          
-          if (onProgress) {
-            onProgress(`Executing ${functionName}...`);
-          }
+      // Allow up to 3 tool call iterations
+      while (iteration < 3) {
+        iteration++;
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${groqKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: this.history,
+            tools: aiTools,
+            tool_choice: "auto",
+            temperature: 0.1
+          })
+        });
 
-          try {
-            // Execute the matching agent function
-            if (functionName in agents) {
-              const handler = agents[functionName as keyof typeof agents];
-              const resultData = await handler(args);
-              
-              functionResponses.push({
-                functionResponse: {
-                  name: functionName,
-                  response: resultData
-                }
-              });
-            } else {
-              throw new Error(`Unknown function: ${functionName}`);
-            }
-          } catch (err: any) {
-             functionResponses.push({
-                functionResponse: {
-                  name: functionName,
-                  response: { error: err.message }
-                }
-              });
-          }
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`Groq API Error: ${err}`);
         }
 
-        // 3. Send the function responses back to the model
-        const nextResult = await this.chatSession.sendMessage(functionResponses);
-        response = nextResult.response;
-        
-        // Gemini might call more functions or return final text
-        calls = response.functionCalls();
-        if (!calls || calls.length === 0) {
-          responseText = response.text();
+        const data = await res.json();
+        const responseMessage = data.choices[0].message;
+
+        this.history.push(responseMessage);
+
+        if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+          for (const call of responseMessage.tool_calls) {
+            const functionName = call.function.name;
+            const args = JSON.parse(call.function.arguments);
+
+            if (onProgress) {
+              onProgress(`Executing ${functionName}...`);
+            }
+
+            let resultData;
+            try {
+              if (functionName in agents) {
+                const handler = agents[functionName as keyof typeof agents];
+                resultData = await handler(args);
+              } else {
+                throw new Error(`Unknown function: ${functionName}`);
+              }
+            } catch (err: any) {
+              resultData = { error: err.message };
+            }
+
+            this.history.push({
+              role: "tool",
+              tool_call_id: call.id,
+              name: functionName,
+              content: JSON.stringify(resultData)
+            });
+          }
+        } else {
+          finalResponseText = responseMessage.content;
+          break;
         }
       }
 
-      return responseText || "Action completed successfully.";
+      return finalResponseText || "Action completed successfully.";
     } catch (error) {
       console.error("AIOrchestrator error:", error);
       throw error;

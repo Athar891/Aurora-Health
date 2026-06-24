@@ -78,7 +78,7 @@ function MacroBar({
           />
         </View>
         <Text style={styles.remaining}>
-          {remaining}{unit} left · {goal}{unit} goal
+          {current} / {goal} {unit}
         </Text>
       </View>
     </View>

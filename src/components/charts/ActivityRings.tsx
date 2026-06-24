@@ -15,7 +15,14 @@ interface ActivityRingsProps {
   gap?: number;
 }
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+// Wrapper to strip the 'collapsable' prop injected by react-native-web's Animated
+// which causes a React DOM warning on standard SVG elements.
+const CircleWrapper = React.forwardRef<any, any>((props, ref) => {
+  const { collapsable, ...rest } = props;
+  return <Circle ref={ref} {...rest} />;
+});
+
+const AnimatedCircle = Animated.createAnimatedComponent(CircleWrapper);
 
 export function ActivityRings({
   rings,

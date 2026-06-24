@@ -6,7 +6,7 @@ interface UseVoiceRecorderReturn {
   isTranscribing: boolean;
   transcribedText: string | null;
   error: string | null;
-  startRecording: () => Promise<void>;
+  startRecording: (opts?: { onLiveTranscript?: (text: string) => void; onSilence?: () => void }) => Promise<void>;
   stopAndTranscribe: () => Promise<string | null>;
   clearTranscription: () => void;
 }
@@ -18,11 +18,11 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   const [error, setError] = useState<string | null>(null);
   const recordingRef = useRef(false);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async (opts?: { onLiveTranscript?: (text: string) => void; onSilence?: () => void }) => {
     try {
       setError(null);
       setTranscribedText(null);
-      await voiceService.startRecording();
+      await voiceService.startRecording(opts);
       setIsRecording(true);
       recordingRef.current = true;
     } catch (err: any) {
