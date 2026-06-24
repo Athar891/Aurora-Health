@@ -14,7 +14,6 @@ import { Gear, CaretRight, SignOut } from "phosphor-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
-import { SectionHeader } from "../../src/components/shared/SectionHeader";
 import { Card } from "../../src/components/ui/Card";
 import { Divider } from "../../src/components/ui/Divider";
 import { textStyles } from "../../src/theme/styles";
@@ -116,8 +115,11 @@ export default function ProfileScreen() {
 
   return (
     <ScreenWrapper scrollable={false}>
-      <View style={[styles.header, { justifyContent: "space-between" }]}>
-        <SectionHeader style={{ flex: 1, marginBottom: 0 }} title="Settings & Profile" subtitle="Manage your account and preferences." />
+      <View style={styles.header}>
+        <View>
+          <Text style={textStyles.captionSmall}>ACCOUNT</Text>
+          <Text style={[textStyles.h2, { marginTop: spacing.xs }]}>Settings & Profile</Text>
+        </View>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -249,8 +251,9 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingTop: spacing.md,
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.lg,
     marginHorizontal: -spacing.lg,
@@ -259,7 +262,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.line,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 2,
     zIndex: 10,

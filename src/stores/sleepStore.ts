@@ -27,7 +27,10 @@ export const useSleepStore = create<SleepState>((set) => ({
         id,
         createdAt: new Date(),
       };
-      set((state) => ({ logs: [newLog, ...state.logs] }));
+      set((state) => ({ 
+        logs: [newLog, ...state.logs],
+        weeklyLogs: [...state.weeklyLogs, newLog],
+      }));
     } catch (err) {
       console.error("Failed to add sleep log:", err);
     }

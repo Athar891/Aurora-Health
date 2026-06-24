@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Animated, Platform, Easing } from "react-native";
-import { Drop, Gear, Plus, CheckCircle } from "phosphor-react-native";
+import { Drop, Plus, CheckCircle } from "phosphor-react-native";
 import { useRouter } from "expo-router";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
 import { SectionHeader } from "../../src/components/shared/SectionHeader";
+import { HeaderAvatar } from "../../src/components/shared/HeaderAvatar";
 import { Card } from "../../src/components/ui/Card";
 import { WeeklyBarChart } from "../../src/components/charts/WeeklyBarChart";
 import { textStyles } from "../../src/theme/styles";
@@ -96,16 +97,13 @@ export default function NourishScreen() {
     <ScreenWrapper scrollable={false}>
       {/* Header */}
       <View style={styles.header}>
-        <SectionHeader
-          style={{ flex: 1, marginBottom: 0 }}
-          title="Hydration & Meals"
-          subtitle="Fuel and flow."
-          rightAccessory={
-            <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Gear color={colors.ink} size={24} weight="regular" />
-            </TouchableOpacity>
-          }
-        />
+        <View>
+          <Text style={textStyles.captionSmall}>NOURISH</Text>
+          <Text style={[textStyles.h2, { marginTop: spacing.xs }]}>Fuel and flow.</Text>
+        </View>
+        <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <HeaderAvatar />
+        </TouchableOpacity>
       </View>
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.twoColumnContainer}>
@@ -181,7 +179,7 @@ export default function NourishScreen() {
 
             <Card style={styles.chartCard}>
               <Text style={[textStyles.caption, styles.chartLabel]}>THIS WEEK — HYDRATION</Text>
-              <WeeklyBarChart data={hydrationChartData} maxValue={3000} goalValue={dailyGoalMl} accentColor={colors.accentSlate} />
+              <WeeklyBarChart data={hydrationChartData} maxValue={3000} accentColor={colors.accentSlate} height={120} />
             </Card>
           </View>
 
@@ -201,7 +199,7 @@ export default function NourishScreen() {
 
             {/* Daily Macros Card */}
             <Card style={styles.macrosCard}>
-              <Text style={[textStyles.caption, styles.chartLabel]}>DAILY TOTALS</Text>
+              <Text style={[textStyles.caption, styles.totalsLabel]}>DAILY TOTALS</Text>
               <MacroGoalBar totals={totals} goals={goals} />
             </Card>
 
@@ -250,8 +248,9 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingTop: spacing.md,
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.lg,
     marginHorizontal: -spacing.lg,
@@ -387,7 +386,12 @@ const styles = StyleSheet.create({
   chartLabel: {
     color: colors.inkSoft,
     letterSpacing: 1,
-    marginBottom: spacing.sm,
+  },
+  totalsLabel: {
+    color: colors.inkSoft,
+    letterSpacing: 1,
+    fontWeight: "bold",
+    marginBottom: spacing.md,
   },
   // Nutrition
   macrosCard: {

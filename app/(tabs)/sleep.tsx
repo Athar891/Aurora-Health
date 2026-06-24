@@ -4,10 +4,10 @@ import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, LayoutAnim
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-import { Moon, Plus, Gear, Bed, Alarm, Star, Sun, TrendUp, Trash } from "phosphor-react-native";
+import { Moon, Plus, Bed, Alarm, Star, Sun, TrendUp, Trash } from "phosphor-react-native";
 import { useRouter } from "expo-router";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
-import { SectionHeader } from "../../src/components/shared/SectionHeader";
+import { HeaderAvatar } from "../../src/components/shared/HeaderAvatar";
 import { Card } from "../../src/components/ui/Card";
 import { WeeklyBarChart } from "../../src/components/charts/WeeklyBarChart";
 import { textStyles } from "../../src/theme/styles";
@@ -241,14 +241,12 @@ export default function SleepScreen() {
   return (
     <ScreenWrapper scrollable={false}>
       <View style={styles.header}>
-        <SectionHeader
-          style={{ flex: 1, marginBottom: 0 }}
-          title="Sleep"
-          subtitle="Rest and recharge."
-          subtitleStyle={{ fontStyle: "italic", color: "#8B7D6B", fontSize: fontSizes.bodySmall }}
-        />
+        <View>
+          <Text style={textStyles.captionSmall}>SLEEP</Text>
+          <Text style={[textStyles.h2, { marginTop: spacing.xs }]}>Rest and recharge.</Text>
+        </View>
         <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Gear color={colors.ink} size={24} weight="bold" />
+          <HeaderAvatar />
         </TouchableOpacity>
       </View>
 
@@ -331,7 +329,6 @@ export default function SleepScreen() {
           <WeeklyBarChart
             data={chartData}
             maxValue={12}
-            goalValue={8}
             accentColor={colors.accentMustard}
           />
         </View>
@@ -404,8 +401,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: spacing.md,
+    alignItems: "flex-start",
+    paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.lg,
     marginHorizontal: -spacing.lg,
@@ -416,7 +413,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
-    elevation: 1,
+    elevation: 2,
     zIndex: 10,
   },
   floatingButton: {

@@ -12,17 +12,19 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { CaretLeft, Sparkle, Gear, ClockCounterClockwise } from "phosphor-react-native";
+import { CaretLeft, Sparkle, ClockCounterClockwise } from "phosphor-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { colors, spacing, radii } from "../../src/theme/tokens";
 import { textStyles } from "../../src/theme/styles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { aiOrchestrator } from "../../src/services/ai/orchestrator";
+import { Message } from "../../src/types/models";
 import { voiceService } from "../../src/services/ai/voiceService";
+import { useAISettingsStore } from "../../src/stores/aiSettingsStore";
 import { useVoiceRecorder } from "../../src/hooks/useVoiceRecorder";
 import { useAuthStore } from "../../src/stores/authStore";
-
 // Components
+import { HeaderAvatar } from "../../src/components/shared/HeaderAvatar";
 import AssistantEmptyState from "../../src/components/assistant/AssistantEmptyState";
 import GradientInputBar from "../../src/components/assistant/GradientInputBar";
 import LiveAssistantOverlay from "../../src/components/assistant/LiveAssistantOverlay";
@@ -41,6 +43,7 @@ export default function AssistantModal() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [progressText, setProgressText] = useState("");
+  const { autoReadResponses, voiceSpeed } = useAISettingsStore();
   const [showLiveAssistant, setShowLiveAssistant] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const flatListRef = useRef<FlatList>(null);
@@ -115,6 +118,10 @@ export default function AssistantModal() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+
+      if (autoReadResponses) {
+        voiceService.speak(responseText, { rate: voiceSpeed });
+      }
     } catch (error: any) {
       console.error("AI Error:", error?.message || error);
       const errorMessage: Message = {
@@ -140,23 +147,25 @@ export default function AssistantModal() {
 
   // Handle mic press (inline voice-to-text)
   const handleMicPress = useCallback(async () => {
+    const initialInput = inputRef.current;
     if (isMicRecording) {
       // Stop and transcribe manually
       const text = await stopAndTranscribeRef.current();
       if (text) {
-        setInput(inputRef.current ? inputRef.current + " " + text : text);
+        // If we started with text, keep it and append Whisper's final result
+        setInput(initialInput ? initialInput + " " + text : text);
       }
     } else {
       // Start recording with real-time text injection and auto-stop on silence
       await startRecording({
         onLiveTranscript: (text) => {
-          setInput(text);
+          setInput(initialInput ? initialInput + " " + text : text);
         },
         onSilence: async () => {
           if (stopAndTranscribeRef.current) {
             const text = await stopAndTranscribeRef.current();
             if (text) {
-              setInput(inputRef.current ? inputRef.current + " " + text : text);
+              setInput(initialInput ? initialInput + " " + text : text);
             }
           }
         }
@@ -235,11 +244,7 @@ export default function AssistantModal() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <View style={[styles.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", borderBottomWidth: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.sm }]}>
-        <View>
-          <Text style={textStyles.captionSmall}>AURORA AI</Text>
-          <Text style={[textStyles.h2, { marginTop: spacing.xs }]}>{getGreeting()}, {firstName}.</Text>
-        </View>
+      <View style={[styles.header, { flexDirection: "row", justifyContent: "flex-end", alignItems: "center", borderBottomWidth: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.sm }]}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}>
           <TouchableOpacity
             onPress={() => router.push("/(modals)/chat-history")}
@@ -251,7 +256,7 @@ export default function AssistantModal() {
             onPress={() => router.push("/(tabs)/profile")}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Gear color={colors.ink} size={24} weight="regular" />
+            <HeaderAvatar />
           </TouchableOpacity>
         </View>
       </View>
@@ -267,7 +272,7 @@ export default function AssistantModal() {
             ]}
             pointerEvents={hasUserMessages ? "none" : "auto"}
           >
-            <AssistantEmptyState />
+            <AssistantEmptyState firstName={firstName} />
           </Animated.View>
         )}
 

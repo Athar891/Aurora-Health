@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, ActivityIndicator, AppState, Animated, Platform } from "react-native";
-import { Check, CheckSquareOffset, Plus, Gear } from "phosphor-react-native";
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView, ActivityIndicator, AppState, Animated, Platform, Alert } from "react-native";
+import { Check, CheckSquareOffset, Plus, Trash } from "phosphor-react-native";
 import { useRouter } from "expo-router";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
-import { SectionHeader } from "../../src/components/shared/SectionHeader";
+import { HeaderAvatar } from "../../src/components/shared/HeaderAvatar";
 import { Card } from "../../src/components/ui/Card";
 import { textStyles } from "../../src/theme/styles";
 import { colors, spacing, radii, typography, fontSizes } from "../../src/theme/tokens";
@@ -59,12 +59,24 @@ function LeafWatermark({ opacity = 0.06, size = 180 }: { opacity?: number; size?
  * Inline circular progress ring rendered via SVG.
  * Shows daily habit completion progress next to the header.
  */
-function ProgressRing({ completed, total, size = 40 }: { completed: number; total: number; size?: number }) {
-  const strokeWidth = 3;
+function ProgressRing({ completed, total, size = 40, strokeWidth = 3 }: { completed: number; total: number; size?: number; strokeWidth?: number }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = total > 0 ? completed / total : 0;
   const strokeDashoffset = circumference * (1 - progress);
+
+  const getLabel = () => {
+    if (total === 0) return "—";
+    if (progress >= 1) return "Great";
+    if (progress >= 0.5) return "Good";
+    return "Low";
+  };
+
+  const getColor = () => {
+    if (progress >= 1) return colors.accentOlive;
+    if (progress >= 0.5) return colors.accentMustard;
+    return colors.accentTerracotta;
+  };
 
   return (
     <View style={{ alignItems: "center", justifyContent: "center", width: size, height: size }}>
@@ -79,28 +91,40 @@ function ProgressRing({ completed, total, size = 40 }: { completed: number; tota
           fill="none"
         />
         {/* Progress */}
-        <SvgCircle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={colors.accentOlive}
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={`${circumference}`}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-        />
+        {progress > 0 && (
+          <SvgCircle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={getColor()}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={`${circumference}`}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        )}
       </Svg>
       {/* Center label */}
       <View style={{ position: "absolute", alignItems: "center", justifyContent: "center" }}>
         <Text style={{
-          fontFamily: typography.caption.fontFamily,
-          fontSize: 10,
-          color: progress >= 1 ? colors.accentOlive : colors.inkSoft,
-          letterSpacing: 0.2,
+          fontFamily: typography.display.semiBold,
+          fontSize: size > 50 ? fontSizes.h3 : 10,
+          color: colors.ink,
         }}>
-          {completed}/{total}
+          {getLabel()}
         </Text>
+        {size > 50 && (
+          <Text style={{
+            fontFamily: typography.caption.fontFamily,
+            fontSize: 9,
+            color: colors.inkSoft,
+            letterSpacing: 0.5,
+            marginTop: 1,
+          }}>
+            {Math.round(progress * 100)}%
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -108,7 +132,7 @@ function ProgressRing({ completed, total, size = 40 }: { completed: number; tota
 
 export default function HabitsScreen() {
   const router = useRouter();
-  const { habits, completions, isLoading, addHabit, toggleCompletion, fetchHabits, fetchCompletions } = useHabitsStore();
+  const { habits, completions, isLoading, addHabit, toggleCompletion, fetchHabits, fetchCompletions, deleteHabit } = useHabitsStore();
   const [showAddModal, setShowAddModal] = useState(false);
   const [todayStr, setTodayStr] = useState(getTodayStr());
 
@@ -214,6 +238,24 @@ export default function HabitsScreen() {
       handleToggle(habit.id);
     };
 
+    const handleDeletePress = () => {
+      const msg = `Are you sure you want to delete "${habit.title}"?`;
+      if (Platform.OS === "web") {
+        if (window.confirm(msg)) {
+          deleteHabit(habit.id);
+        }
+      } else {
+        Alert.alert(
+          "Delete Habit",
+          msg,
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Delete", style: "destructive", onPress: () => deleteHabit(habit.id) }
+          ]
+        );
+      }
+    };
+
     return (
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <TouchableOpacity activeOpacity={0.9} onPress={handlePress}>
@@ -232,11 +274,21 @@ export default function HabitsScreen() {
               </Text>
             </View>
 
-            <View style={styles.checkboxContainer}>
-              <View style={[styles.checkboxOutline, completed && styles.checkboxOutlineCompleted]}>
-                <Animated.View style={[styles.checkboxFill, { transform: [{ scale: checkScale }] }]}>
-                  <Check color={colors.bgPaper} weight="bold" size={16} />
-                </Animated.View>
+            <View style={styles.rightActions}>
+              <TouchableOpacity 
+                style={styles.deleteButton} 
+                onPress={handleDeletePress}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Trash color={colors.inkSoft} size={20} />
+              </TouchableOpacity>
+              
+              <View style={styles.checkboxContainer}>
+                <View style={[styles.checkboxOutline, completed && styles.checkboxOutlineCompleted]}>
+                  <Animated.View style={[styles.checkboxFill, { transform: [{ scale: checkScale }] }]}>
+                    <Check color={colors.bgPaper} weight="bold" size={16} />
+                  </Animated.View>
+                </View>
               </View>
             </View>
           </View>
@@ -252,42 +304,21 @@ export default function HabitsScreen() {
       {/* Header area with sticky header + progress bar */}
       <View style={styles.headerArea}>
         <View style={styles.header}>
-          <SectionHeader
-            style={{ flex: 1, marginBottom: 0 }}
-            title="Daily Routines"
-            subtitle="Small steps, big impact."
-            subtitleStyle={styles.subtitleItalic}
-          />
+          <View>
+            <Text style={textStyles.captionSmall}>DAILY ROUTINES</Text>
+            <Text style={[textStyles.h2, { marginTop: spacing.xs }]}>Small steps, big impact.</Text>
+          </View>
           <View style={styles.headerRight}>
-            {totalCount > 0 && (
-              <ProgressRing completed={completedCount} total={totalCount} size={38} />
-            )}
             <TouchableOpacity
               onPress={() => router.push("/(tabs)/profile")}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               style={{ marginLeft: spacing.md }}
             >
-              <Gear color={colors.ink} size={24} weight="bold" />
+              <HeaderAvatar />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Minimalist progress bar */}
-        {totalCount > 0 && (
-          <View style={styles.progressBarContainer}>
-            <View style={styles.progressBarTrack}>
-              <View
-                style={[
-                  styles.progressBarFill,
-                  { width: `${(completedCount / totalCount) * 100}%` as any },
-                ]}
-              />
-            </View>
-            <Text style={styles.progressLabel}>
-              {allDone ? "All done for today ✓" : `${completedCount} of ${totalCount} completed`}
-            </Text>
-          </View>
-        )}
       </View>
 
       {isLoading ? (
@@ -303,6 +334,25 @@ export default function HabitsScreen() {
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+          {/* Hero Card */}
+          <View style={styles.heroCard}>
+            <View style={styles.heroWatermark}>
+              <CheckSquareOffset color={colors.accentOlive} size={52} weight="fill" />
+            </View>
+            <View style={styles.heroLeft}>
+              <ProgressRing completed={completedCount} total={totalCount} size={100} strokeWidth={5} />
+            </View>
+            <View style={styles.heroRight}>
+              <Text style={styles.heroLabel}>TODAY'S HABITS</Text>
+              <Text style={styles.heroValue}>
+                {completedCount} <Text style={{ fontSize: fontSizes.h3, color: colors.inkSoft }}>/ {totalCount}</Text>
+              </Text>
+              <Text style={[styles.heroSubtext, { marginTop: spacing.xs, color: allDone && totalCount > 0 ? colors.accentOlive : colors.inkSoft }]}>
+                {allDone && totalCount > 0 ? "All done for today ✓" : `${totalCount - completedCount} remaining`}
+              </Text>
+            </View>
+          </View>
+
           {habits.map((habit) => (
             <AnimatedHabitCard key={habit.id} habit={habit} />
           ))}
@@ -345,13 +395,19 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: spacing.md,
+    alignItems: "flex-start",
+    paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.lg,
     marginHorizontal: -spacing.lg,
     backgroundColor: colors.bgPaper,
-    borderBottomWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
     zIndex: 10,
   },
   headerRight: {
@@ -364,38 +420,44 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.bodySmall,
   },
 
-  /* ── Progress bar ── */
-  progressBarContainer: {
-    paddingHorizontal: spacing.lg,
-    marginHorizontal: -spacing.lg,
-    paddingBottom: spacing.md,
-    backgroundColor: colors.bgPaper,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  progressBarTrack: {
-    height: 3,
-    backgroundColor: colors.line,
-    borderRadius: 2,
+  /* ── Hero Card ── */
+  heroCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.bgPaperAlt,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    gap: spacing.lg,
     overflow: "hidden",
   },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: colors.accentOlive,
-    borderRadius: 2,
+  heroWatermark: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    opacity: 0.12,
   },
-  progressLabel: {
+  heroLeft: {
+    alignItems: "center",
+  },
+  heroRight: {
+    flex: 1,
+  },
+  heroLabel: {
     fontFamily: typography.caption.fontFamily,
     fontSize: fontSizes.captionSmall,
-    color: "#8B7D6B",
-    letterSpacing: 0.5,
-    marginTop: spacing.xs + 2,
-    textTransform: "uppercase",
+    color: colors.inkSoft,
+    letterSpacing: 1,
+    marginBottom: spacing.xs,
+  },
+  heroValue: {
+    fontFamily: typography.display.semiBold,
+    fontSize: fontSizes.h1,
+    color: colors.ink,
+  },
+  heroSubtext: {
+    fontFamily: typography.body.fontFamily,
+    fontSize: fontSizes.bodySmall,
   },
 
   /* ── FAB ── */
@@ -461,6 +523,14 @@ const styles = StyleSheet.create({
   textCompleted: {
     color: colors.inkSoft,
     textDecorationLine: "line-through",
+  },
+  rightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  deleteButton: {
+    padding: spacing.xs,
   },
 
   /* ── Checkbox ── */

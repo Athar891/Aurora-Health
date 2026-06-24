@@ -8,44 +8,24 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { X } from "phosphor-react-native";
 import { colors, spacing, radii, typography, fontSizes } from "../../theme/tokens";
 import { textStyles } from "../../theme/styles";
+import { useAISettingsStore } from "../../stores/aiSettingsStore";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const STORAGE_KEY = "@aurora_ai_settings";
-
-export interface AISettings {
-  autoReadResponses: boolean;
-  responseStyle: "concise" | "detailed";
-  voiceSpeed: number;
-}
-
-const DEFAULT_SETTINGS: AISettings = {
-  autoReadResponses: false,
-  responseStyle: "concise",
-  voiceSpeed: 1.0,
-};
 
 interface AISettingsSheetProps {
   visible: boolean;
   onClose: () => void;
-  onSettingsChange?: (settings: AISettings) => void;
 }
 
 export default function AISettingsSheet({
   visible,
   onClose,
-  onSettingsChange,
 }: AISettingsSheetProps) {
-  const [settings, setSettings] = useState<AISettings>(DEFAULT_SETTINGS);
+  const { autoReadResponses, responseStyle, voiceSpeed, updateSetting } = useAISettingsStore();
   const translateY = React.useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, []);
 
   // Animate in/out
   useEffect(() => {
@@ -56,35 +36,6 @@ export default function AISettingsSheet({
       useNativeDriver: true,
     }).start();
   }, [visible]);
-
-  const loadSettings = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setSettings(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.log("Failed to load AI settings");
-    }
-  };
-
-  const saveSettings = async (newSettings: AISettings) => {
-    setSettings(newSettings);
-    onSettingsChange?.(newSettings);
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
-    } catch (e) {
-      console.log("Failed to save AI settings");
-    }
-  };
-
-  const updateSetting = <K extends keyof AISettings>(
-    key: K,
-    value: AISettings[K]
-  ) => {
-    const newSettings = { ...settings, [key]: value };
-    saveSettings(newSettings);
-  };
 
   if (!visible) return null;
 
@@ -124,7 +75,7 @@ export default function AISettingsSheet({
               </Text>
             </View>
             <Switch
-              value={settings.autoReadResponses}
+              value={autoReadResponses}
               onValueChange={(val) => updateSetting("autoReadResponses", val)}
               trackColor={{ false: colors.line, true: colors.accentOlive }}
               thumbColor={colors.bgPaper}
@@ -143,16 +94,14 @@ export default function AISettingsSheet({
               <TouchableOpacity
                 style={[
                   styles.toggleOption,
-                  settings.responseStyle === "concise" &&
-                    styles.toggleOptionActive,
+                  responseStyle === "concise" && styles.toggleOptionActive,
                 ]}
                 onPress={() => updateSetting("responseStyle", "concise")}
               >
                 <Text
                   style={[
                     styles.toggleText,
-                    settings.responseStyle === "concise" &&
-                      styles.toggleTextActive,
+                    responseStyle === "concise" && styles.toggleTextActive,
                   ]}
                 >
                   Concise
@@ -161,16 +110,14 @@ export default function AISettingsSheet({
               <TouchableOpacity
                 style={[
                   styles.toggleOption,
-                  settings.responseStyle === "detailed" &&
-                    styles.toggleOptionActive,
+                  responseStyle === "detailed" && styles.toggleOptionActive,
                 ]}
                 onPress={() => updateSetting("responseStyle", "detailed")}
               >
                 <Text
                   style={[
                     styles.toggleText,
-                    settings.responseStyle === "detailed" &&
-                      styles.toggleTextActive,
+                    responseStyle === "detailed" && styles.toggleTextActive,
                   ]}
                 >
                   Detailed
@@ -193,14 +140,14 @@ export default function AISettingsSheet({
                   key={speed}
                   style={[
                     styles.speedButton,
-                    settings.voiceSpeed === speed && styles.speedButtonActive,
+                    voiceSpeed === speed && styles.speedButtonActive,
                   ]}
                   onPress={() => updateSetting("voiceSpeed", speed)}
                 >
                   <Text
                     style={[
                       styles.speedText,
-                      settings.voiceSpeed === speed && styles.speedTextActive,
+                      voiceSpeed === speed && styles.speedTextActive,
                     ]}
                   >
                     {speed}x
@@ -316,4 +263,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export { STORAGE_KEY, DEFAULT_SETTINGS };

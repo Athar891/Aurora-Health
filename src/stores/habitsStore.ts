@@ -25,6 +25,7 @@ interface HabitsState {
 
   // Actions
   addHabit: (habit: Omit<Habit, "id" | "createdAt" | "updatedAt">) => Promise<void>;
+  deleteHabit: (habitId: string) => Promise<void>;
   toggleCompletion: (habitId: string, dateStr: string) => Promise<void>;
   fetchHabits: () => Promise<void>;
   fetchCompletions: (habitId: string, dateStr: string) => Promise<void>;
@@ -57,6 +58,20 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
       set((state) => ({ habits: [newHabit, ...state.habits] }));
     } catch (err) {
       console.error("Failed to add habit:", err);
+    }
+  },
+
+  deleteHabit: async (habitId) => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    try {
+      const habitRef = doc(db, "users", uid, "habits", habitId);
+      await deleteDoc(habitRef);
+      set((state) => ({
+        habits: state.habits.filter((h) => h.id !== habitId),
+      }));
+    } catch (err) {
+      console.error("Failed to delete habit:", err);
     }
   },
 

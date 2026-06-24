@@ -21,6 +21,7 @@ export interface UserProfile {
   weightKg: number;
   profilePhotoUrl?: string;
   onboardingComplete: boolean;
+  loginStreak?: number;
   createdAt: FirestoreTimestamp;
   updatedAt: FirestoreTimestamp;
 }

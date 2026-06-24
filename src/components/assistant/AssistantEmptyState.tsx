@@ -1,23 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { colors, typography, fontSizes, spacing } from "../../theme/tokens";
+import { Sparkle } from "phosphor-react-native";
 
-// Colors for each letter of "Aurora AI" — using Aurora's palette
-const LETTER_COLORS = [
-  colors.accentTerracotta, // A
-  colors.accentOlive,      // u
-  colors.accentSlate,      // r
-  colors.accentMustard,    // o
-  colors.ink,              // r
-  colors.accentTerracotta, // a
-  "",                      // space
-  colors.accentOlive,      // A
-  colors.accentSlate,      // I
-];
+interface AssistantEmptyStateProps {
+  firstName: string;
+}
 
-const TITLE_TEXT = "Aurora AI";
-
-export default function AssistantEmptyState() {
+export default function AssistantEmptyState({ firstName }: AssistantEmptyStateProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
@@ -47,22 +37,12 @@ export default function AssistantEmptyState() {
         },
       ]}
     >
-      <View style={styles.titleRow}>
-        {TITLE_TEXT.split("").map((letter, index) => (
-          <Text
-            key={index}
-            style={[
-              styles.titleLetter,
-              letter === " "
-                ? styles.space
-                : { color: LETTER_COLORS[index] || colors.ink },
-            ]}
-          >
-            {letter}
-          </Text>
-        ))}
+      <View style={styles.iconWrapper}>
+        <Sparkle color={colors.accentTerracotta} size={64} weight="fill" />
       </View>
-      <Text style={styles.subtitle}>Your health companion</Text>
+      <Text style={styles.titleText}>
+        Ask away, {firstName}.
+      </Text>
     </Animated.View>
   );
 }
@@ -74,23 +54,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingBottom: 80, // offset slightly above center
   },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
+  iconWrapper: {
+    marginBottom: spacing.lg,
   },
-  titleLetter: {
+  titleText: {
     fontFamily: typography.display.bold,
-    fontSize: 42,
-    lineHeight: 52,
-  },
-  space: {
-    width: 12,
-  },
-  subtitle: {
-    fontFamily: typography.body.fontFamily,
-    fontSize: fontSizes.bodySmall,
-    color: colors.inkSoft,
-    marginTop: spacing.sm,
-    letterSpacing: 0.5,
+    fontSize: 32,
+    color: colors.ink,
+    textAlign: "center",
   },
 });

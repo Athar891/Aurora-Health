@@ -22,9 +22,9 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
     try {
       setError(null);
       setTranscribedText(null);
-      await voiceService.startRecording(opts);
       setIsRecording(true);
       recordingRef.current = true;
+      await voiceService.startRecording(opts);
     } catch (err: any) {
       setError(err.message || "Failed to start recording");
       setIsRecording(false);

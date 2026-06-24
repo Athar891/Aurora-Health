@@ -118,8 +118,28 @@ export const agents = {
       await habitsStore.toggleCompletion(match.id, dateStr);
       return { success: true, message: `Logged progress for habit: ${match.title}.` };
     } else {
-      return { success: false, message: `Could not find a habit matching: ${habitName}.` };
+      return { success: false, message: `Could not find an existing habit matching: ${habitName}. Ask the user if they want to create it.` };
     }
+  },
+
+  createHabit: async (args: AgentArgs) => {
+    const { title, frequency = "daily" } = args;
+
+    // Log the event for event sourcing
+    await useEventStore.getState().addEvent({
+      eventType: "habit",
+      metadata: { action: "create", title, frequency },
+      source: "ai",
+      timestamp: new Date().toISOString(),
+    });
+
+    await useHabitsStore.getState().addHabit({
+      title,
+      frequency: frequency as "daily" | "weekly",
+      category: "wellness", // default
+    });
+
+    return { success: true, message: `Successfully created the new habit: ${title}.` };
   },
 
   updateMemory: async (args: AgentArgs) => {

@@ -98,6 +98,28 @@ export const aiTools = [
   {
     type: "function",
     function: {
+      name: "createHabit",
+      description: "Create a NEW habit for the user to start tracking. Use this if they want to build a new habit.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: {
+            type: "string",
+            description: "The name of the new habit (e.g., 'Cycling', 'Meditation').",
+          },
+          frequency: {
+            type: "string",
+            description: "How often they want to do this. Defaults to 'daily'.",
+            enum: ["daily", "weekly"],
+          },
+        },
+        required: ["title"],
+      },
+    }
+  },
+  {
+    type: "function",
+    function: {
       name: "updateMemory",
       description: "Save a fact, preference, or contextual piece of information to the user's memory.",
       parameters: {

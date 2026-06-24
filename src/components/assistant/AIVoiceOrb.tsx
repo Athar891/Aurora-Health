@@ -19,6 +19,7 @@ export function AIVoiceOrb({ isVisible, state, onTap, onClose, text }: AIVoiceOr
   const rot1 = useRef(new Animated.Value(0)).current;
   const rot2 = useRef(new Animated.Value(0)).current;
   const rot3 = useRef(new Animated.Value(0)).current;
+  const rippleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isVisible) {
@@ -47,13 +48,25 @@ export function AIVoiceOrb({ isVisible, state, onTap, onClose, text }: AIVoiceOr
       spin2.start();
       spin3.start();
 
+      let rippleLoop: Animated.CompositeAnimation | null = null;
+      if (state === "speaking") {
+        rippleLoop = Animated.loop(
+          Animated.timing(rippleAnim, { toValue: 1, duration: 1200, easing: Easing.out(Easing.quad), useNativeDriver: true })
+        );
+        rippleLoop.start();
+      } else {
+        Animated.timing(rippleAnim, { toValue: 0, duration: 300, useNativeDriver: true }).start();
+      }
+
       return () => {
         spin1.stop();
         spin2.stop();
         spin3.stop();
+        rippleLoop?.stop();
         rot1.setValue(0);
         rot2.setValue(0);
         rot3.setValue(0);
+        rippleAnim.setValue(0);
       };
     } else {
       Animated.timing(fadeAnim, {
@@ -71,23 +84,9 @@ export function AIVoiceOrb({ isVisible, state, onTap, onClose, text }: AIVoiceOr
   const spin2 = rot2.interpolate({ inputRange: [0, 1], outputRange: ["360deg", "0deg"] }); // reverse
   const spin3 = rot3.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
 
-  let c1 = colors.inkSoft;
-  let c2 = colors.ink;
-  let c3 = colors.bgPaperAlt;
-  
-  if (state === "listening") {
-    c1 = colors.accentSlate; // Blue
-    c2 = colors.success;     // Green
-    c3 = colors.primary;     // Terracotta
-  } else if (state === "processing") {
-    c1 = colors.accentMustard;
-    c2 = colors.accentTerracotta;
-    c3 = colors.bgPaper;
-  } else if (state === "speaking") {
-    c1 = colors.info;
-    c2 = colors.primary;
-    c3 = colors.accentSlate;
-  }
+  let c1 = "#00B4D8"; // Bright sky blue
+  let c2 = "#90E0EF"; // Light sky blue
+  let c3 = "#0077B6"; // Deeper blue for contrast
 
   return (
     <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
@@ -97,6 +96,18 @@ export function AIVoiceOrb({ isVisible, state, onTap, onClose, text }: AIVoiceOr
 
       <View style={styles.content}>
         <View style={styles.orbWrapper}>
+          
+          {/* Speaking Ripple Effect */}
+          <Animated.View style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: c2,
+              borderRadius: 100,
+              opacity: rippleAnim.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0] }),
+              transform: [{ scale: rippleAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.4] }) }]
+            }
+          ]} />
+
           <TouchableOpacity style={[styles.orbSphere, { backgroundColor: c2 }]} onPress={onTap} activeOpacity={0.9}>
             
             {/* Massive off-center rotating gradient 1 */}
@@ -177,8 +188,8 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    top: 60,
-    right: 24,
+    top: 40,
+    right: 16,
     width: 44,
     height: 44,
     borderRadius: 22,

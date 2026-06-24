@@ -161,15 +161,25 @@ export default function GradientInputBar({
                   ]}
                 >
                   <TouchableOpacity
-                    style={styles.liveAssistantButton}
                     onPress={onLiveAssistantPress}
                     disabled={hasText}
                   >
-                    <Waveform
-                      color={colors.bgPaper}
-                      size={22}
-                      weight="fill"
-                    />
+                    <LinearGradient
+                      colors={[
+                        colors.accentTerracotta,
+                        colors.accentMustard,
+                        colors.accentOlive,
+                      ]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.liveAssistantButton}
+                    >
+                      <Waveform
+                        color={colors.bgPaper}
+                        size={22}
+                        weight="fill"
+                      />
+                    </LinearGradient>
                   </TouchableOpacity>
                 </Animated.View>
 
@@ -278,7 +288,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.accentSlate,
     alignItems: "center",
     justifyContent: "center",
   },

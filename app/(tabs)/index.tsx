@@ -1,8 +1,9 @@
 import React, { useMemo, useEffect } from "react";
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { Plus, Gear, Drop, Moon } from "phosphor-react-native";
+import { Plus, Drop, Moon } from "phosphor-react-native";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
+import { HeaderAvatar } from "../../src/components/shared/HeaderAvatar";
 import { Card } from "../../src/components/ui/Card";
 import { ProgressBar } from "../../src/components/ui/ProgressBar";
 import { MiniBarChart } from "../../src/components/charts/MiniBarChart";
@@ -243,7 +244,7 @@ export default function HomeDashboard() {
           <Text style={[textStyles.h2, styles.greeting]}>{greeting}, {firstName}.</Text>
         </View>
         <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Gear color={colors.ink} size={24} weight="regular" />
+          <HeaderAvatar />
         </TouchableOpacity>
       </View>
 

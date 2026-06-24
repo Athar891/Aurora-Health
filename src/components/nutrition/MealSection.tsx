@@ -1,6 +1,10 @@
-import React from "react";
-import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
-import { Plus } from "phosphor-react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, TouchableOpacity, Text, LayoutAnimation, Platform, UIManager } from "react-native";
+import { Plus, CaretDown, CaretUp } from "phosphor-react-native";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { MealFoodEntry, MealType } from "../../types/models";
 import { colors, spacing, radii, typography, fontSizes, borders } from "../../theme/tokens";
 
@@ -19,12 +23,22 @@ export function MealSection({
   onLogMeal,
   accentColor,
 }: MealSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const totalCals = entries.reduce((sum, e) => sum + e.calories, 0);
+
+  const toggleExpand = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsExpanded(!isExpanded);
+  };
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <TouchableOpacity 
+        style={styles.header} 
+        activeOpacity={0.8} 
+        onPress={toggleExpand}
+      >
         <View style={styles.headerLeft}>
           <Text style={styles.title}>{title}</Text>
         </View>
@@ -36,11 +50,19 @@ export function MealSection({
           >
             <Plus size={18} color={accentColor} weight="bold" />
           </TouchableOpacity>
+          <View style={styles.caretBtn}>
+            {isExpanded ? (
+              <CaretUp size={18} color={colors.inkSoft} weight="bold" />
+            ) : (
+              <CaretDown size={18} color={colors.inkSoft} weight="bold" />
+            )}
+          </View>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* Content */}
-      <View style={styles.content}>
+      {isExpanded && (
+        <View style={styles.content}>
         {entries.length === 0 ? (
           <Text style={styles.emptyText}>Nothing logged yet.</Text>
           ) : (
@@ -70,6 +92,7 @@ export function MealSection({
             </View>
           )}
         </View>
+      )}
     </View>
   );
 }
@@ -113,6 +136,11 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
     borderRadius: radii.pill,
     backgroundColor: colors.bgPaperAlt,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  caretBtn: {
+    padding: spacing.xs,
     alignItems: "center",
     justifyContent: "center",
   },
