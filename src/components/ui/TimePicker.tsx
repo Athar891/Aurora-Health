@@ -1,12 +1,14 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  ViewToken,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  TouchableOpacity,
 } from "react-native";
-import { colors, spacing, radii } from "../../theme/tokens";
+import { colors, spacing, radii, typography, fontSizes } from "../../theme/tokens";
 import { textStyles } from "../../theme/styles";
 
 interface TimePickerProps {
@@ -21,69 +23,145 @@ const HOURS = Array.from({ length: 12 }, (_, i) => i + 1); // 1-12
 const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5); // 0, 5, 10, ..., 55
 const PERIODS = ["AM", "PM"];
 
+/**
+ * WheelColumn — A scroll-snap wheel for picking a single value.
+ *
+ * Bug-fix: The previous implementation used a stale useRef for
+ * handleViewableItemsChanged, capturing onSelect at mount time.
+ * This version uses onMomentumScrollEnd to calculate the selected
+ * index from the scroll offset — much more reliable on all platforms.
+ */
 function WheelColumn({
   data,
   selectedIndex,
   onSelect,
   formatItem,
 }: {
-  data: number[] | string[];
+  data: (number | string)[];
   selectedIndex: number;
   onSelect: (index: number) => void;
   formatItem?: (item: number | string) => string;
 }) {
   const flatListRef = useRef<FlatList>(null);
-  const isScrolling = useRef(false);
+  const onSelectRef = useRef(onSelect);
+  const isUserScrolling = useRef(false);
+  const lastReportedIndex = useRef(selectedIndex);
 
+  // Keep callback ref fresh so scroll handler always calls latest onSelect
   useEffect(() => {
-    // Scroll to initial position
-    setTimeout(() => {
-      flatListRef.current?.scrollToIndex({
-        index: selectedIndex,
-        animated: false,
-        viewPosition: 0.5,
-      });
-    }, 100);
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
+
+  // Scroll to initial position on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (flatListRef.current && selectedIndex >= 0 && selectedIndex < data.length) {
+        flatListRef.current.scrollToOffset({
+          offset: selectedIndex * ITEM_HEIGHT,
+          animated: false,
+        });
+      }
+    }, 80);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && isScrolling.current) {
-        // Find the center item
-        const centerItem = viewableItems[Math.floor(viewableItems.length / 2)];
-        if (centerItem?.index != null) {
-          onSelect(centerItem.index);
+  // Sync scroll position when selectedIndex changes externally (e.g. AM/PM toggle)
+  useEffect(() => {
+    if (!isUserScrolling.current && selectedIndex !== lastReportedIndex.current) {
+      lastReportedIndex.current = selectedIndex;
+      const timer = setTimeout(() => {
+        if (flatListRef.current && selectedIndex >= 0 && selectedIndex < data.length) {
+          flatListRef.current.scrollToOffset({
+            offset: selectedIndex * ITEM_HEIGHT,
+            animated: true,
+          });
         }
-      }
+      }, 50);
+      return () => clearTimeout(timer);
     }
-  ).current;
+  }, [selectedIndex, data.length]);
 
-  const handleScrollBegin = () => {
-    isScrolling.current = true;
-  };
+  const handleScrollBegin = useCallback(() => {
+    isUserScrolling.current = true;
+  }, []);
 
-  const handleMomentumEnd = () => {
-    isScrolling.current = false;
-  };
+  const handleScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = e.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const clampedIndex = Math.max(0, Math.min(index, data.length - 1));
+
+      isUserScrolling.current = false;
+      lastReportedIndex.current = clampedIndex;
+
+      // Snap to exact position
+      flatListRef.current?.scrollToOffset({
+        offset: clampedIndex * ITEM_HEIGHT,
+        animated: true,
+      });
+
+      if (clampedIndex !== selectedIndex) {
+        onSelectRef.current(clampedIndex);
+      }
+    },
+    [data.length, selectedIndex]
+  );
+
+  // Also handle regular scroll end (drag without momentum)
+  const handleDragEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = e.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const clampedIndex = Math.max(0, Math.min(index, data.length - 1));
+
+      isUserScrolling.current = false;
+      lastReportedIndex.current = clampedIndex;
+
+      flatListRef.current?.scrollToOffset({
+        offset: clampedIndex * ITEM_HEIGHT,
+        animated: true,
+      });
+
+      if (clampedIndex !== selectedIndex) {
+        onSelectRef.current(clampedIndex);
+      }
+    },
+    [data.length, selectedIndex]
+  );
 
   const renderItem = ({ item, index }: { item: number | string; index: number }) => {
     const isSelected = index === selectedIndex;
+    const distance = Math.abs(index - selectedIndex);
     const label = formatItem ? formatItem(item) : String(item);
+
     return (
-      <View style={[styles.wheelItem, { height: ITEM_HEIGHT }]}>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => {
+          // Direct tap to select
+          flatListRef.current?.scrollToOffset({
+            offset: index * ITEM_HEIGHT,
+            animated: true,
+          });
+          lastReportedIndex.current = index;
+          onSelectRef.current(index);
+        }}
+        style={[styles.wheelItem, { height: ITEM_HEIGHT }]}
+      >
         <Text
           style={[
             textStyles.bodySemiBold,
             {
-              fontSize: isSelected ? 22 : 16,
+              fontSize: isSelected ? 22 : distance === 1 ? 17 : 14,
               color: isSelected ? colors.ink : colors.inkSoft,
-              opacity: isSelected ? 1 : 0.4,
+              opacity: isSelected ? 1 : distance === 1 ? 0.5 : 0.25,
             },
           ]}
         >
           {label}
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -98,11 +176,8 @@ function WheelColumn({
         snapToInterval={ITEM_HEIGHT}
         decelerationRate="fast"
         onScrollBeginDrag={handleScrollBegin}
-        onMomentumScrollEnd={handleMomentumEnd}
-        onViewableItemsChanged={handleViewableItemsChanged}
-        viewabilityConfig={{
-          itemVisiblePercentThreshold: 50,
-        }}
+        onMomentumScrollEnd={handleScrollEnd}
+        onScrollEndDrag={handleDragEnd}
         contentContainerStyle={{
           paddingVertical: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
         }}
@@ -111,6 +186,7 @@ function WheelColumn({
           offset: ITEM_HEIGHT * index,
           index,
         })}
+        extraData={selectedIndex}
       />
     </View>
   );
@@ -126,26 +202,34 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
   );
   const periodIndex = is12h ? 1 : 0;
 
-  const handleHourChange = (index: number) => {
+  // Use refs to always get latest values in callbacks without re-renders
+  const valueRef = useRef(value);
+  const periodRef = useRef(periodIndex);
+  useEffect(() => {
+    valueRef.current = value;
+    periodRef.current = periodIndex;
+  }, [value, periodIndex]);
+
+  const handleHourChange = useCallback((index: number) => {
     const h = HOURS[index];
-    const isPM = periodIndex === 1;
+    const isPM = periodRef.current === 1;
     let newHour = h;
     if (isPM && h !== 12) newHour = h + 12;
     if (!isPM && h === 12) newHour = 0;
-    onChange({ hours: newHour, minutes: value.minutes });
-  };
+    onChange({ hours: newHour, minutes: valueRef.current.minutes });
+  }, [onChange]);
 
-  const handleMinuteChange = (index: number) => {
-    onChange({ hours: value.hours, minutes: MINUTES[index] });
-  };
+  const handleMinuteChange = useCallback((index: number) => {
+    onChange({ hours: valueRef.current.hours, minutes: MINUTES[index] });
+  }, [onChange]);
 
-  const handlePeriodChange = (index: number) => {
+  const handlePeriodChange = useCallback((index: number) => {
     const isPM = index === 1;
-    let newHour = value.hours;
+    let newHour = valueRef.current.hours;
     if (isPM && newHour < 12) newHour += 12;
     if (!isPM && newHour >= 12) newHour -= 12;
-    onChange({ hours: newHour, minutes: value.minutes });
-  };
+    onChange({ hours: newHour, minutes: valueRef.current.minutes });
+  }, [onChange]);
 
   return (
     <View style={styles.container}>

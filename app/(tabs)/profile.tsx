@@ -120,7 +120,7 @@ export default function ProfileScreen() {
         <SectionHeader style={{ flex: 1, marginBottom: 0 }} title="Settings & Profile" subtitle="Manage your account and preferences." />
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Summary */}
         <TouchableOpacity onPress={handlePickPhoto} activeOpacity={0.7}>
           <View style={styles.profileSummary}>
@@ -148,10 +148,18 @@ export default function ProfileScreen() {
 
         <Divider />
 
-        <Text style={[textStyles.captionSmall, styles.sectionTitle]}>
-          PREFERENCES
-        </Text>
         <Card noPadding style={styles.menuCard}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push("/(modals)/edit-profile")}
+            activeOpacity={0.7}
+          >
+            <Text style={textStyles.bodyMedium}>Edit Profile Details</Text>
+            <CaretRight color={colors.inkSoft} size={20} />
+          </TouchableOpacity>
+          
+          <Divider style={styles.menuDivider} />
+          
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => {
@@ -166,7 +174,9 @@ export default function ProfileScreen() {
             <Text style={textStyles.bodyMedium}>Notifications</Text>
             <CaretRight color={colors.inkSoft} size={20} />
           </TouchableOpacity>
+
           <Divider style={styles.menuDivider} />
+
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => router.push("/(modals)/daily-goals")}
@@ -175,7 +185,9 @@ export default function ProfileScreen() {
             <Text style={textStyles.bodyMedium}>Daily Goals</Text>
             <CaretRight color={colors.inkSoft} size={20} />
           </TouchableOpacity>
+
           <Divider style={styles.menuDivider} />
+
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => router.push("/(modals)/linked-devices")}
@@ -184,12 +196,9 @@ export default function ProfileScreen() {
             <Text style={textStyles.bodyMedium}>Linked Devices</Text>
             <CaretRight color={colors.inkSoft} size={20} />
           </TouchableOpacity>
-        </Card>
 
-        <Text style={[textStyles.captionSmall, styles.sectionTitle]}>
-          SUPPORT
-        </Text>
-        <Card noPadding style={styles.menuCard}>
+          <Divider style={styles.menuDivider} />
+
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => router.push("/(modals)/help-center")}
@@ -198,7 +207,9 @@ export default function ProfileScreen() {
             <Text style={textStyles.bodyMedium}>Help Center</Text>
             <CaretRight color={colors.inkSoft} size={20} />
           </TouchableOpacity>
+
           <Divider style={styles.menuDivider} />
+
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => router.push("/(modals)/privacy-policy")}
@@ -207,12 +218,9 @@ export default function ProfileScreen() {
             <Text style={textStyles.bodyMedium}>Privacy Policy</Text>
             <CaretRight color={colors.inkSoft} size={20} />
           </TouchableOpacity>
-        </Card>
 
-        <Text style={[textStyles.captionSmall, styles.sectionTitle]}>
-          DATA MANAGEMENT
-        </Text>
-        <Card noPadding style={styles.menuCard}>
+          <Divider style={styles.menuDivider} />
+
           <TouchableOpacity
             style={styles.menuItem}
             onPress={handleClearData}
@@ -221,17 +229,18 @@ export default function ProfileScreen() {
             <Text style={[textStyles.bodyMedium, { color: colors.error }]}>Clear All Data</Text>
             <CaretRight color={colors.inkSoft} size={20} />
           </TouchableOpacity>
-        </Card>
 
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleSignOut}
-        >
-          <SignOut color={colors.error} size={20} />
-          <Text style={[textStyles.bodySemiBold, { color: colors.error }]}>
-            Sign Out
-          </Text>
-        </TouchableOpacity>
+          <Divider style={styles.menuDivider} />
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={handleSignOut}
+            activeOpacity={0.7}
+          >
+            <Text style={[textStyles.bodyMedium, { color: colors.error }]}>Sign Out</Text>
+            <SignOut color={colors.error} size={20} />
+          </TouchableOpacity>
+        </Card>
       </ScrollView>
     </ScreenWrapper>
   );

@@ -7,15 +7,23 @@ export default function ModalsLayout() {
       headerShown: false,
       contentStyle: { backgroundColor: colors.bgPaper }
     }}>
-      <Stack.Screen name="sleep-log" options={{ presentation: "modal" }} />
+      <Stack.Screen 
+        name="sleep-log" 
+        options={{ 
+          presentation: "transparentModal", 
+          animation: "fade",
+          contentStyle: { backgroundColor: "transparent" } 
+        }} 
+      />
       <Stack.Screen name="nutrition-log" options={{ presentation: "modal" }} />
-      <Stack.Screen
-        name="assistant"
-        options={{
-          presentation: "fullScreenModal",
-          animation: "slide_from_bottom",
-          gestureEnabled: true,
-        }}
+      <Stack.Screen name="chat-history" options={{ presentation: "modal" }} />
+      <Stack.Screen 
+        name="edit-profile" 
+        options={{ 
+          presentation: "transparentModal", 
+          animation: "fade",
+          contentStyle: { backgroundColor: "transparent" } 
+        }} 
       />
       <Stack.Screen name="daily-goals" options={{ presentation: "modal" }} />
       <Stack.Screen name="linked-devices" options={{ presentation: "modal" }} />

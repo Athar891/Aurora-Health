@@ -177,6 +177,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Profile update failed";
       set({ error: message });
+      throw err;
     }
   },
 }));

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { SleepLog } from "../types/models";
-import { addSubDoc, querySubDocs, querySubDocsBetweenDates, toDate } from "../services/firestoreService";
+import { addSubDoc, deleteSubDoc, querySubDocs, querySubDocsBetweenDates, toDate } from "../services/firestoreService";
 
 interface SleepState {
   logs: SleepLog[];
@@ -9,6 +9,7 @@ interface SleepState {
 
   // Actions
   addLog: (log: Omit<SleepLog, "id" | "createdAt">) => Promise<void>;
+  deleteLog: (logId: string) => Promise<void>;
   fetchLogs: (dateStr: string) => Promise<void>;
   fetchWeeklyLogs: (startDateStr: string, endDateStr: string) => Promise<void>;
 }
@@ -29,6 +30,18 @@ export const useSleepStore = create<SleepState>((set) => ({
       set((state) => ({ logs: [newLog, ...state.logs] }));
     } catch (err) {
       console.error("Failed to add sleep log:", err);
+    }
+  },
+
+  deleteLog: async (logId) => {
+    try {
+      await deleteSubDoc("sleepLogs", logId);
+      set((state) => ({
+        logs: state.logs.filter((l) => l.id !== logId),
+        weeklyLogs: state.weeklyLogs.filter((l) => l.id !== logId),
+      }));
+    } catch (err) {
+      console.error("Failed to delete sleep log:", err);
     }
   },
 

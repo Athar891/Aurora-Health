@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from "react";
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { Plus, Gear } from "phosphor-react-native";
+import { Plus, Gear, Drop, Moon } from "phosphor-react-native";
 import { ScreenWrapper } from "../../src/components/ui/ScreenWrapper";
 import { Card } from "../../src/components/ui/Card";
 import { ProgressBar } from "../../src/components/ui/ProgressBar";
@@ -165,6 +165,13 @@ export default function HomeDashboard() {
 
   // Calculate sparkline data
   const sparklineDates = useMemo(() => getLast7DaysStrings(todayStr), [todayStr]);
+  const sparklineLabels = useMemo(() => {
+    return sparklineDates.map(dateStr => {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const date = new Date(y, m - 1, d);
+      return date.toLocaleDateString("en-US", { weekday: "narrow" }); // M, T, W, etc.
+    });
+  }, [sparklineDates]);
   
   const hydrationSparkline = useMemo(() => {
     return sparklineDates.map(date => {
@@ -246,79 +253,87 @@ export default function HomeDashboard() {
           <Text style={textStyles.body}>{insight}</Text>
         </Card>
 
-        {/* Daily Score / Activity Rings Card */}
-        <Card label="DAILY SCORE" style={styles.scoreCard}>
-          <View style={styles.scoreRow}>
-            <ActivityRings 
-              size={110}
-              strokeWidth={11}
-              gap={3}
-              rings={[
-                { progress: hydrationProgress, color: colors.accentSlate, backgroundColor: colors.accentSlateLight },
-                { progress: sleepProgress, color: colors.accentMustard, backgroundColor: colors.accentMustardLight },
-                { progress: habitsProgress, color: colors.accentOlive, backgroundColor: colors.accentOliveLight },
-                { progress: caloriesProgress, color: colors.accentTerracotta, backgroundColor: colors.accentTerracottaLight }
-              ]} 
-            />
-            <View style={styles.scoreDetails}>
-              <Text style={textStyles.h3}>You're doing great</Text>
-              <Text style={[textStyles.bodySmall, { color: colors.inkSoft, marginTop: 4, marginBottom: 12 }]}>
-                Keep closing your rings today!
-              </Text>
-              
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.accentSlate }]} />
-                <Text style={textStyles.captionSmall}>WATER {Math.round(hydrationProgress * 100)}%</Text>
+        {/* Main 2-Column Dashboard Layout */}
+        <View style={styles.mainColumnsRow}>
+          {/* Left Column: Daily Score */}
+          <View style={styles.leftColumn}>
+            <Card label="DAILY SCORE" style={styles.fullHeightCard}>
+              <View style={styles.scoreStacked}>
+                <ActivityRings 
+                  size={120}
+                  strokeWidth={12}
+                  gap={3}
+                  rings={[
+                    { progress: hydrationProgress, color: colors.accentSlate, backgroundColor: colors.accentSlateLight },
+                    { progress: sleepProgress, color: colors.accentMustard, backgroundColor: colors.accentMustardLight },
+                    { progress: habitsProgress, color: colors.accentOlive, backgroundColor: colors.accentOliveLight },
+                    { progress: caloriesProgress, color: colors.accentTerracotta, backgroundColor: colors.accentTerracottaLight }
+                  ]} 
+                />
+                <View style={styles.scoreDetailsStacked}>
+                  <Text style={[textStyles.h3, { textAlign: 'center' }]}>You're doing great</Text>
+                  <Text style={[textStyles.bodySmall, { color: colors.inkSoft, marginTop: 4, marginBottom: 16, textAlign: 'center' }]}>
+                    Keep closing your rings today!
+                  </Text>
+                  
+                  <View style={styles.legendContainer}>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: colors.accentSlate }]} />
+                      <Text style={textStyles.captionSmall}>WATER</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: colors.accentMustard }]} />
+                      <Text style={textStyles.captionSmall}>SLEEP</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: colors.accentOlive }]} />
+                      <Text style={textStyles.captionSmall}>HABITS</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: colors.accentTerracotta }]} />
+                      <Text style={textStyles.captionSmall}>MEALS</Text>
+                    </View>
+                  </View>
+                </View>
               </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.accentMustard }]} />
-                <Text style={textStyles.captionSmall}>SLEEP {Math.round(sleepProgress * 100)}%</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.accentOlive }]} />
-                <Text style={textStyles.captionSmall}>HABIT {Math.round(habitsProgress * 100)}%</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.accentTerracotta }]} />
-                <Text style={textStyles.captionSmall}>FOOD  {Math.round(caloriesProgress * 100)}%</Text>
-              </View>
-            </View>
+            </Card>
           </View>
 
-        </Card>
-
-        {/* Quick Summary Row */}
-        <View style={styles.summaryRow}>
-          <Card style={styles.halfCard}>
-            <View style={styles.cardHeaderRow}>
-              <Text style={textStyles.captionSmall}>HYDRATION</Text>
-              <View style={styles.sparklineContainer}>
-                <MiniBarChart data={hydrationSparkline} maxValue={dailyGoalMl} accentColor={colors.accentSlate} />
+          {/* Right Column: Summaries */}
+          <View style={styles.rightColumn}>
+            <Card style={styles.flexCard}>
+              <View style={styles.cardHeaderRow}>
+                <Text style={textStyles.captionSmall}>HYDRATION</Text>
+                <Drop color={colors.accentSlate} size={28} weight="fill" style={{ opacity: 0.4 }} />
               </View>
-            </View>
-            <Text style={[textStyles.h2, styles.metricValue]}>
-              {totalMl.toLocaleString()}<Text style={textStyles.bodySmall}>ml</Text>
-            </Text>
-            <ProgressBar progress={hydrationProgress} color={colors.accentSlate} style={styles.progress} />
-          </Card>
-
-          <Card style={styles.halfCard}>
-            <View style={styles.cardHeaderRow}>
-              <Text style={textStyles.captionSmall}>SLEEP</Text>
-              <View style={styles.sparklineContainer}>
-                <MiniBarChart data={sleepSparkline} maxValue={8} accentColor={colors.accentMustard} />
-              </View>
-            </View>
-            {lastSleep ? (
               <Text style={[textStyles.h2, styles.metricValue]}>
-                {sleepHours}<Text style={textStyles.bodySmall}>h</Text>{" "}
-                {sleepMins}<Text style={textStyles.bodySmall}>m</Text>
+                {totalMl.toLocaleString()}<Text style={textStyles.bodySmall}>ml</Text>
               </Text>
-            ) : (
-              <Text style={[textStyles.body, { color: colors.inkSoft, marginTop: spacing.xs }]}>—</Text>
-            )}
-            <ProgressBar progress={sleepProgress} color={colors.accentMustard} style={styles.progress} />
-          </Card>
+              <ProgressBar progress={hydrationProgress} color={colors.accentSlate} style={styles.progress} />
+              <View style={styles.bottomSparkline}>
+                <MiniBarChart data={hydrationSparkline} labels={sparklineLabels} maxValue={dailyGoalMl} accentColor={colors.accentSlate} />
+              </View>
+            </Card>
+
+            <Card style={styles.flexCard}>
+              <View style={styles.cardHeaderRow}>
+                <Text style={textStyles.captionSmall}>SLEEP</Text>
+                <Moon color={colors.accentMustard} size={28} weight="fill" style={{ opacity: 0.4 }} />
+              </View>
+              {lastSleep ? (
+                <Text style={[textStyles.h2, styles.metricValue]}>
+                  {sleepHours}<Text style={textStyles.bodySmall}>h</Text>{" "}
+                  {sleepMins}<Text style={textStyles.bodySmall}>m</Text>
+                </Text>
+              ) : (
+                <Text style={[textStyles.body, { color: colors.inkSoft, marginTop: spacing.xs }]}>—</Text>
+              )}
+              <ProgressBar progress={sleepProgress} color={colors.accentMustard} style={styles.progress} />
+              <View style={styles.bottomSparkline}>
+                <MiniBarChart data={sleepSparkline} labels={sparklineLabels} maxValue={8} accentColor={colors.accentMustard} />
+              </View>
+            </Card>
+          </View>
         </View>
 
         {/* Action Center */}
@@ -381,49 +396,67 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: spacing.xl, // Reduced — FAB handles its own spacing
   },
-  scoreCard: {
-    marginBottom: spacing.md,
-  },
-  scoreRow: {
+  mainColumnsRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
+    gap: spacing.md,
+    marginBottom: spacing.xl,
   },
-  scoreDetails: {
-    marginLeft: spacing.lg,
+  leftColumn: {
+    flex: 1.1, // slightly wider for the rings
+  },
+  rightColumn: {
+    flex: 0.9,
+    gap: spacing.md,
+  },
+  fullHeightCard: {
     flex: 1,
+  },
+  flexCard: {
+    flex: 1,
+  },
+  scoreStacked: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing.sm,
+  },
+  scoreDetailsStacked: {
+    marginTop: spacing.lg,
+    alignItems: "center",
+    width: "100%",
+  },
+  legendContainer: {
+    width: "100%",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.xs,
   },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 4,
+    width: "48%",
+    marginBottom: 8,
   },
   legendDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: spacing.xs,
+    marginRight: spacing.sm,
   },
   insightCard: {
     marginBottom: spacing.md,
     backgroundColor: colors.bgPaperAlt,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-    marginBottom: spacing.xl,
-  },
-  halfCard: {
-    flex: 1,
   },
   cardHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
   },
-  sparklineContainer: {
-    width: 48,
-    height: 24,
+  bottomSparkline: {
+    marginTop: spacing.sm,
+    height: 40,
+    width: "100%",
   },
   metricValue: {
     marginTop: spacing.xs,
