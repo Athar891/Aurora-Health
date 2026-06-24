@@ -35,7 +35,7 @@ const EVENING_INSIGHTS = [
   "Wind down well! 🌙 Log your sleep and hit that 8-hour goal.",
   "Evening check-in 🌿 Great work today — don't forget to log your meals.",
   "Almost there! ✨ Log your sleep and end the day strong.",
-  "Night mode on 🌙 Sleep well — your body recovers while you rest.",
+  "Time to wind down 🌙\nSleep well — your body recovers while you rest.",
 ];
 
 function getDynamicInsight(): string {
